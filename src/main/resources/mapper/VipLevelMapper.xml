@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.VipLevelDao">
+
+    <resultMap id="VipLevelResultMap" type="com.smallnine.apiserver.entity.VipLevel">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="minSpending" column="min_spending" />
+        <result property="discountRate" column="discount_rate" />
+        <result property="pointsMultiplier" column="points_multiplier" />
+        <result property="freeShippingThreshold" column="free_shipping_threshold" />
+        <result property="benefits" column="benefits" />
+        <result property="isActive" column="is_active" />
+        <result property="sortOrder" column="sort_order" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, name, min_spending, discount_rate, points_multiplier,
+        free_shipping_threshold, benefits, is_active, sort_order
+    </sql>
+
+    <!-- 根據ID查詢VIP等級 -->
+    <select id="findById" resultMap="VipLevelResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM vip_level
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根據名稱查詢VIP等級 -->
+    <select id="findByName" resultMap="VipLevelResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM vip_level
+        WHERE name = #{name}
+    </select>
+
+    <!-- 查詢所有啟用的VIP等級（按排序） -->
+    <select id="findAllActive" resultMap="VipLevelResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM vip_level
+        WHERE is_active = true
+        ORDER BY sort_order ASC, min_spending ASC
+    </select>
+
+    <!-- 查詢所有VIP等級 -->
+    <select id="findAll" resultMap="VipLevelResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM vip_level
+        ORDER BY sort_order ASC, min_spending ASC
+    </select>
+
+    <!-- 根據消費金額查詢匹配的VIP等級 -->
+    <select id="findBySpending" resultMap="VipLevelResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM vip_level
+        WHERE is_active = true AND min_spending &lt;= #{spending}
+        ORDER BY min_spending DESC
+        LIMIT 1
+    </select>
+
+    <!-- 創建VIP等級 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO vip_level (
+            name, min_spending, discount_rate, points_multiplier,
+            free_shipping_threshold, benefits, is_active, sort_order
+        ) VALUES (
+            #{name}, #{minSpending}, #{discountRate}, #{pointsMultiplier},
+            #{freeShippingThreshold}, #{benefits}, 
+            COALESCE(#{isActive}, true), #{sortOrder}
+        )
+    </insert>
+
+    <!-- 更新VIP等級 -->
+    <update id="update">
+        UPDATE vip_level SET
+            name = #{name},
+            min_spending = #{minSpending},
+            discount_rate = #{discountRate},
+            points_multiplier = #{pointsMultiplier},
+            free_shipping_threshold = #{freeShippingThreshold},
+            benefits = #{benefits},
+            is_active = #{isActive},
+            sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 刪除VIP等級 -->
+    <delete id="deleteById">
+        DELETE FROM vip_level WHERE id = #{id}
+    </delete>
+
+    <!-- 檢查名稱是否已存在 -->
+    <select id="existsByName" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM vip_level WHERE name = #{name}
+    </select>
+
+    <!-- 統計VIP等級總數 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM vip_level
+    </select>
+
+    <!-- 統計啟用的VIP等級數量 -->
+    <select id="countActive" resultType="long">
+        SELECT COUNT(*) FROM vip_level WHERE is_active = true
+    </select>
+
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.BrandDao">
+
+    <resultMap id="BrandResultMap" type="com.smallnine.apiserver.entity.Brand">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="logoUrl" column="logo_url" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, name, description, logo_url, created_at
+    </sql>
+
+    <!-- 根據ID查詢品牌 -->
+    <select id="findById" resultMap="BrandResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM brands
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根據名稱查詢品牌 -->
+    <select id="findByName" resultMap="BrandResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM brands
+        WHERE name = #{name}
+    </select>
+
+    <!-- 查詢所有品牌（分頁） -->
+    <select id="findAll" resultMap="BrandResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM brands
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據名稱模糊搜索品牌 -->
+    <select id="searchByName" resultMap="BrandResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM brands
+        WHERE name ILIKE CONCAT('%', #{name}, '%')
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 創建品牌 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO brands (
+            name, description, logo_url, created_at
+        ) VALUES (
+            #{name}, #{description}, #{logoUrl}, NOW()
+        )
+    </insert>
+
+    <!-- 更新品牌訊息 -->
+    <update id="update">
+        UPDATE brands SET
+            name = #{name},
+            description = #{description},
+            logo_url = #{logoUrl}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根據ID刪除品牌 -->
+    <delete id="deleteById">
+        DELETE FROM brands WHERE id = #{id}
+    </delete>
+
+    <!-- 統計品牌總數 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM brands
+    </select>
+
+    <!-- 檢查品牌名稱是否存在 -->
+    <select id="existsByName" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM brands WHERE name = #{name}
+    </select>
+
+    <!-- 統計品牌下的商品數量 -->
+    <select id="countProductsByBrandId" resultType="long">
+        SELECT COUNT(*) FROM product WHERE brand_id = #{brandId}
+    </select>
+
+</mapper>

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds" debug="false">
+
+    <!-- Spring 顏色轉換器 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+
+    <!-- 基礎屬性 -->
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="api-server"/>
+    <property name="LOG_PATH" value="logs"/>
+
+    <!-- ===== 日誌格式定義 ===== -->
+
+    <!-- 控制台格式（帶顏色，開發用） -->
+    <property name="CONSOLE_PATTERN"
+              value="%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%X{traceId:-}]){magenta} %clr(%-40.40logger{39}){cyan} : %m%n%wEx"/>
+
+    <!-- 標準文件格式（含 MDC） -->
+    <property name="FILE_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] [%X{userId:-}] %logger{50} - %msg%n"/>
+
+    <!-- 審計日誌格式（結構化，便於解析） -->
+    <property name="AUDIT_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n"/>
+
+    <!-- ======================================== -->
+    <!-- 開發環境配置 -->
+    <!-- ======================================== -->
+    <springProfile name="!prod">
+
+        <!-- 控制台輸出 -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${CONSOLE_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+
+        <!-- 全量日誌文件 -->
+        <appender name="FILE_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/${APP_NAME}.log</file>
+            <encoder>
+                <pattern>${FILE_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>50MB</maxFileSize>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>500MB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- 審計日誌（開發環境也輸出到控制台） -->
+        <appender name="AUDIT_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%clr(%d{HH:mm:ss}){faint} %clr(AUDIT){yellow} %msg%n</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+
+        <!-- 安全日誌（開發環境也輸出到控制台） -->
+        <appender name="SECURITY_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%clr(%d{HH:mm:ss}){faint} %clr(SECURITY){red} %msg%n</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE_ALL"/>
+        </root>
+
+        <!-- 開發環境：審計日誌輸出到控制台 -->
+        <logger name="AUDIT" level="INFO" additivity="false">
+            <appender-ref ref="AUDIT_CONSOLE"/>
+            <appender-ref ref="FILE_ALL"/>
+        </logger>
+
+        <logger name="SECURITY" level="INFO" additivity="false">
+            <appender-ref ref="SECURITY_CONSOLE"/>
+            <appender-ref ref="FILE_ALL"/>
+        </logger>
+
+    </springProfile>
+
+    <!-- ======================================== -->
+    <!-- 生產環境配置 -->
+    <!-- ======================================== -->
+    <springProfile name="prod">
+
+        <!-- 應用日誌 - INFO 級別 -->
+        <appender name="FILE_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/${APP_NAME}-info.log</file>
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>INFO</level>
+                <onMatch>ACCEPT</onMatch>
+                <onMismatch>DENY</onMismatch>
+            </filter>
+            <encoder>
+                <pattern>${FILE_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>3GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- 錯誤日誌 - WARN 及以上 -->
+        <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/${APP_NAME}-error.log</file>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>WARN</level>
+            </filter>
+            <encoder>
+                <pattern>${FILE_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>50MB</maxFileSize>
+                <maxHistory>90</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- ===== 審計日誌（獨立文件，長期保存） ===== -->
+        <appender name="FILE_AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/audit/${APP_NAME}-audit.log</file>
+            <encoder>
+                <pattern>${AUDIT_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/audit/${APP_NAME}-audit-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <!-- 審計日誌保留 1 年 -->
+                <maxHistory>365</maxHistory>
+                <totalSizeCap>10GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- ===== 安全日誌（獨立文件，長期保存） ===== -->
+        <appender name="FILE_SECURITY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/security/${APP_NAME}-security.log</file>
+            <encoder>
+                <pattern>${AUDIT_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/security/${APP_NAME}-security-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>50MB</maxFileSize>
+                <!-- 安全日誌保留 2 年 -->
+                <maxHistory>730</maxHistory>
+                <totalSizeCap>5GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- ===== 業務日誌 ===== -->
+        <appender name="FILE_BUSINESS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/${APP_NAME}-business.log</file>
+            <encoder>
+                <pattern>${FILE_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-business-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>2GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- ===== 性能日誌 ===== -->
+        <appender name="FILE_PERFORMANCE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/${APP_NAME}-performance.log</file>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-}] %msg%n</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-performance-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>50MB</maxFileSize>
+                <maxHistory>14</maxHistory>
+                <totalSizeCap>500MB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- ===== JSON 格式（用於 ELK） ===== -->
+        <appender name="FILE_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/json/${APP_NAME}.json</file>
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                    <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</timestampFormat>
+                    <timestampFormatTimezoneId>UTC</timestampFormatTimezoneId>
+                    <appendLineSeparator>true</appendLineSeparator>
+                    <includeContextName>false</includeContextName>
+                    <includeException>true</includeException>
+                    <includeMDC>true</includeMDC>
+                </layout>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/json/${APP_NAME}-%d{yyyy-MM-dd}.%i.json</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!-- 根日誌 -->
+        <root level="INFO">
+            <appender-ref ref="FILE_INFO"/>
+            <appender-ref ref="FILE_ERROR"/>
+            <appender-ref ref="FILE_JSON"/>
+        </root>
+
+        <!-- 審計日誌 Logger（獨立輸出，不繼承 root） -->
+        <logger name="AUDIT" level="INFO" additivity="false">
+            <appender-ref ref="FILE_AUDIT"/>
+            <appender-ref ref="FILE_JSON"/>
+        </logger>
+
+        <!-- 安全日誌 Logger -->
+        <logger name="SECURITY" level="INFO" additivity="false">
+            <appender-ref ref="FILE_SECURITY"/>
+            <appender-ref ref="FILE_JSON"/>
+        </logger>
+
+        <!-- 業務日誌 Logger -->
+        <logger name="BUSINESS" level="INFO" additivity="false">
+            <appender-ref ref="FILE_BUSINESS"/>
+        </logger>
+
+        <!-- 性能日誌 Logger -->
+        <logger name="PERFORMANCE" level="INFO" additivity="false">
+            <appender-ref ref="FILE_PERFORMANCE"/>
+        </logger>
+
+    </springProfile>
+
+    <!-- ======================================== -->
+    <!-- 通用 Logger 配置 -->
+    <!-- ======================================== -->
+
+    <!-- 框架日誌級別 -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.apache.ibatis" level="INFO"/>
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+
+    <!-- 應用日誌級別 -->
+    <logger name="com.smallnine.apiserver" level="DEBUG"/>
+    <logger name="com.smallnine.apiserver.service" level="INFO"/>
+    <logger name="com.smallnine.apiserver.controller" level="INFO"/>
+
+    <!-- SQL 日誌（僅開發環境） -->
+    <springProfile name="!prod">
+        <logger name="com.smallnine.apiserver.dao" level="DEBUG"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+    </springProfile>
+
+</configuration>

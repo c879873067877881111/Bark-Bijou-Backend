@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.CategoryDao">
+
+    <resultMap id="CategoryResultMap" type="com.smallnine.apiserver.entity.Category">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="parentId" column="parent_id" />
+        <result property="imageUrl" column="image_url" />
+        <result property="isActive" column="is_active" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, name, description, parent_id, image_url, is_active, created_at
+    </sql>
+
+    <!-- 根據ID查詢分類 -->
+    <select id="findById" resultMap="CategoryResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM categories
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根據名稱查詢分類 -->
+    <select id="findByName" resultMap="CategoryResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM categories
+        WHERE name = #{name}
+    </select>
+
+    <!-- 查詢所有分類（分頁） -->
+    <select id="findAll" resultMap="CategoryResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM categories
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 查詢啟用的分類（分頁） -->
+    <select id="findActiveCategories" resultMap="CategoryResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM categories
+        WHERE is_active = true
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據父分類ID查詢子分類 -->
+    <select id="findByParentId" resultMap="CategoryResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM categories
+        WHERE parent_id = #{parentId} AND is_active = true
+        ORDER BY name ASC
+    </select>
+
+    <!-- 查詢頂級分類（parentId為null） -->
+    <select id="findTopCategories" resultMap="CategoryResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM categories
+        WHERE parent_id IS NULL AND is_active = true
+        ORDER BY name ASC
+    </select>
+
+    <!-- 創建分類 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO categories (
+            name, description, parent_id, image_url, is_active, created_at
+        ) VALUES (
+            #{name}, #{description}, #{parentId}, #{imageUrl}, #{isActive}, NOW()
+        )
+    </insert>
+
+    <!-- 更新分類訊息 -->
+    <update id="update">
+        UPDATE categories SET
+            name = #{name},
+            description = #{description},
+            parent_id = #{parentId},
+            image_url = #{imageUrl},
+            is_active = #{isActive}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根據ID刪除分類 -->
+    <delete id="deleteById">
+        DELETE FROM categories WHERE id = #{id}
+    </delete>
+
+    <!-- 更新分類狀態 -->
+    <update id="updateStatus">
+        UPDATE categories SET
+            is_active = #{isActive}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 統計分類總數 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM categories
+    </select>
+
+    <!-- 統計啟用的分類數量 -->
+    <select id="countActive" resultType="long">
+        SELECT COUNT(*) FROM categories WHERE is_active = true
+    </select>
+
+    <!-- 統計子分類數量 -->
+    <select id="countByParentId" resultType="long">
+        SELECT COUNT(*) FROM categories WHERE parent_id = #{parentId}
+    </select>
+
+    <!-- 檢查分類名稱是否存在 -->
+    <select id="existsByName" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM categories WHERE name = #{name}
+    </select>
+
+    <!-- 檢查分類是否有子分類 -->
+    <select id="hasChildren" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM categories WHERE parent_id = #{id}
+    </select>
+
+</mapper>

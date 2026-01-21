@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.RefreshTokenDao">
+
+    <resultMap id="RefreshTokenResultMap" type="com.smallnine.apiserver.entity.RefreshToken">
+        <id column="id" property="id"/>
+        <result column="token" property="token"/>
+        <result column="user_id" property="userId"/>
+        <result column="expiry_date" property="expiryDate"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="revoked" property="revoked"/>
+    </resultMap>
+
+    <!-- 保存 refresh token -->
+    <insert id="save" parameterType="com.smallnine.apiserver.entity.RefreshToken" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO refresh_tokens (
+            token, user_id, expiry_date, created_at, updated_at, revoked
+        ) VALUES (
+            #{token}, #{userId}, #{expiryDate}, NOW(), NOW(), #{revoked}
+        )
+    </insert>
+
+    <!-- 根據 token 查找 -->
+    <select id="findByToken" resultMap="RefreshTokenResultMap">
+        SELECT * FROM refresh_tokens 
+        WHERE token = #{token} AND revoked = false
+    </select>
+
+    <!-- 根據用戶ID查找 -->
+    <select id="findByUserId" resultMap="RefreshTokenResultMap">
+        SELECT * FROM refresh_tokens 
+        WHERE user_id = #{userId} AND revoked = false
+        ORDER BY created_at DESC 
+        LIMIT 1
+    </select>
+
+    <!-- 撤銷用戶的所有 token -->
+    <update id="revokeByUserId">
+        UPDATE refresh_tokens 
+        SET revoked = true, updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 撤銷特定 token -->
+    <update id="revokeByToken">
+        UPDATE refresh_tokens 
+        SET revoked = true, updated_at = NOW()
+        WHERE token = #{token}
+    </update>
+
+    <!-- 刪除過期的 tokens -->
+    <delete id="deleteExpiredTokens">
+        DELETE FROM refresh_tokens 
+        WHERE expiry_date &lt; #{now} OR revoked = true
+    </delete>
+
+    <!-- 查找過期的 tokens -->
+    <select id="findExpiredTokens" resultMap="RefreshTokenResultMap">
+        SELECT * FROM refresh_tokens 
+        WHERE expiry_date &lt; #{now}
+    </select>
+
+</mapper>

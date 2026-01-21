@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.ProductDao">
+
+    <resultMap id="ProductResultMap" type="com.smallnine.apiserver.entity.Product">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="price" column="price" />
+        <result property="salePrice" column="sale_price" />
+        <result property="sku" column="sku" />
+        <result property="stockQuantity" column="stock_quantity" />
+        <result property="brandId" column="brand_id" />
+        <result property="categoryId" column="category_id" />
+        <result property="isActive" column="is_active" />
+        <result property="weight" column="weight" />
+        <result property="dimensions" column="dimensions" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, name, description, price, sale_price, sku, stock_quantity,
+        brand_id, category_id, is_active, weight, dimensions, created_at, updated_at
+    </sql>
+
+    <!-- 根據ID查詢商品 -->
+    <select id="findById" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根據SKU查詢商品 -->
+    <select id="findBySku" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE sku = #{sku}
+    </select>
+
+    <!-- 根據分類ID查詢商品 -->
+    <select id="findByCategoryId" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE category_id = #{categoryId} AND is_active = true
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 根據分類ID查詢商品（分頁） -->
+    <select id="findByCategoryIdWithPaging" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE category_id = #{categoryId} AND is_active = true
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據品牌ID查詢商品 -->
+    <select id="findByBrandId" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE brand_id = #{brandId} AND is_active = true
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查詢啟用的商品（分頁） -->
+    <select id="findActiveProducts" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE is_active = true
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 查詢所有商品（分頁） -->
+    <select id="findAll" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據名稱模糊搜索商品 -->
+    <select id="searchByName" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE name ILIKE CONCAT('%', #{name}, '%') AND is_active = true
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據價格範圍查詢商品 -->
+    <select id="findByPriceRange" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE is_active = true
+        <if test="minPrice != null">
+            AND price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND price &lt;= #{maxPrice}
+        </if>
+        ORDER BY price ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 搜索商品（組合條件） -->
+    <select id="searchProducts" resultMap="ProductResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM product
+        WHERE is_active = true
+        <if test="keyword != null and keyword != ''">
+            AND (name ILIKE CONCAT('%', #{keyword}, '%') OR description ILIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="minPrice != null">
+            AND price >= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND price &lt;= #{maxPrice}
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 創建商品 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product (
+            name, description, price, sale_price, sku, stock_quantity,
+            brand_id, category_id, is_active, weight, dimensions, created_at, updated_at
+        ) VALUES (
+            #{name}, #{description}, #{price}, #{salePrice}, #{sku}, #{stockQuantity},
+            #{brandId}, #{categoryId}, #{isActive}, #{weight}, #{dimensions}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新商品訊息 -->
+    <update id="update">
+        UPDATE product SET
+            name = #{name},
+            description = #{description},
+            price = #{price},
+            sale_price = #{salePrice},
+            sku = #{sku},
+            stock_quantity = #{stockQuantity},
+            brand_id = #{brandId},
+            category_id = #{categoryId},
+            is_active = #{isActive},
+            weight = #{weight},
+            dimensions = #{dimensions},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根據ID刪除商品 -->
+    <delete id="deleteById">
+        DELETE FROM product WHERE id = #{id}
+    </delete>
+
+    <!-- 更新商品庫存 -->
+    <update id="updateStock">
+        UPDATE product SET
+            stock_quantity = #{stockQuantity},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 減少商品庫存 -->
+    <update id="decreaseStock">
+        UPDATE product SET
+            stock_quantity = stock_quantity - #{quantity},
+            updated_at = NOW()
+        WHERE id = #{id} AND stock_quantity >= #{quantity}
+    </update>
+
+    <!-- 統計商品總數 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM product WHERE is_active = true
+    </select>
+
+    <!-- 統計分類下的商品數量 -->
+    <select id="countByCategoryId" resultType="long">
+        SELECT COUNT(*) FROM product 
+        WHERE category_id = #{categoryId} AND is_active = true
+    </select>
+
+    <!-- 檢查SKU是否存在 -->
+    <select id="existsBySku" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM product WHERE sku = #{sku}
+    </select>
+
+</mapper>

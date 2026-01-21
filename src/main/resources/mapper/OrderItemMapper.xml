@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.OrderItemDao">
+
+    <resultMap id="OrderItemResultMap" type="com.smallnine.apiserver.entity.OrderItem">
+        <id property="id" column="id" />
+        <result property="orderId" column="order_id" />
+        <result property="productId" column="product_id" />
+        <result property="quantity" column="quantity" />
+        <result property="unitPrice" column="unit_price" />
+        <result property="totalPrice" column="total_price" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, order_id, product_id, quantity, unit_price, total_price, created_at
+    </sql>
+
+    <!-- 根據ID查詢訂單項目 -->
+    <select id="findById" resultMap="OrderItemResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM order_items
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根據訂單ID查詢訂單項目列表 -->
+    <select id="findByOrderId" resultMap="OrderItemResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM order_items
+        WHERE order_id = #{orderId}
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 創建訂單項目 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_items (
+            order_id, product_id, quantity, unit_price, total_price, created_at
+        ) VALUES (
+            #{orderId}, #{productId}, #{quantity}, #{unitPrice}, #{totalPrice}, NOW()
+        )
+    </insert>
+
+    <!-- 批量創建訂單項目 -->
+    <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_items (
+            order_id, product_id, quantity, unit_price, total_price, created_at
+        ) VALUES
+        <foreach collection="orderItems" item="item" separator=",">
+            (#{item.orderId}, #{item.productId}, #{item.quantity}, 
+             #{item.unitPrice}, #{item.totalPrice}, NOW())
+        </foreach>
+    </insert>
+
+    <!-- 更新訂單項目 -->
+    <update id="update">
+        UPDATE order_items SET
+            quantity = #{quantity},
+            unit_price = #{unitPrice},
+            total_price = #{totalPrice}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根據ID刪除訂單項目 -->
+    <delete id="deleteById">
+        DELETE FROM order_items WHERE id = #{id}
+    </delete>
+
+    <!-- 根據訂單ID刪除所有訂單項目 -->
+    <delete id="deleteByOrderId">
+        DELETE FROM order_items WHERE order_id = #{orderId}
+    </delete>
+
+    <!-- 統計訂單項目數量 -->
+    <select id="countByOrderId" resultType="long">
+        SELECT COUNT(*) FROM order_items WHERE order_id = #{orderId}
+    </select>
+
+</mapper>

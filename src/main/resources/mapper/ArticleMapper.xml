@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.ArticleDao">
+
+    <resultMap id="ArticleResultMap" type="com.smallnine.apiserver.entity.Article">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="memberUsername" column="member_username" />
+        <result property="author" column="author" />
+        <result property="title" column="title" />
+        <result property="dogsId" column="dogs_id" />
+        <result property="dogsBreed" column="dogs_breed" />
+        <result property="dogsImages" column="dogs_images" />
+        <result property="content1" column="content1" />
+        <result property="content2" column="content2" />
+        <result property="createdDate" column="created_date" />
+        <result property="createdId" column="created_id" />
+        <result property="eventId" column="event_id" />
+        <result property="valid" column="valid" />
+        <result property="articleImages" column="article_images" />
+        <result property="categoryName" column="category_name" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, member_id, member_username, author, title, dogs_id, dogs_breed,
+        dogs_images, content1, content2, created_date, created_id, event_id,
+        valid, article_images, category_name
+    </sql>
+
+    <!-- 根據ID查詢文章 -->
+    <select id="findById" resultMap="ArticleResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM article
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查詢所有文章（分頁） -->
+    <select id="findAll" resultMap="ArticleResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM article
+        ORDER BY created_date DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據作者查詢文章 -->
+    <select id="findByAuthor" resultMap="ArticleResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM article
+        WHERE author = #{author} AND valid = 1
+        ORDER BY created_date DESC
+    </select>
+
+    <!-- 根據分類查詢文章 -->
+    <select id="findByCategoryName" resultMap="ArticleResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM article
+        WHERE category_name = #{categoryName} AND valid = 1
+        ORDER BY created_date DESC
+    </select>
+
+    <!-- 搜索文章標題 -->
+    <select id="searchByTitle" resultMap="ArticleResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM article
+        WHERE title ILIKE CONCAT('%', #{title}, '%') AND valid = 1
+        ORDER BY created_date DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據成員ID查詢文章 -->
+    <select id="findByMemberId" resultMap="ArticleResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM article
+        WHERE member_id = #{memberId} AND valid = 1
+        ORDER BY created_date DESC
+    </select>
+
+    <!-- 創建文章 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO article (
+            member_id, member_username, author, title, dogs_id, dogs_breed,
+            dogs_images, content1, content2, created_date, created_id, event_id,
+            valid, article_images, category_name
+        ) VALUES (
+            #{memberId}, #{memberUsername}, #{author}, #{title}, #{dogsId}, #{dogsBreed},
+            #{dogsImages}, #{content1}, #{content2}, 
+            COALESCE(#{createdDate}, NOW()), #{createdId}, #{eventId},
+            COALESCE(#{valid}, 1), #{articleImages}, #{categoryName}
+        )
+    </insert>
+
+    <!-- 更新文章 -->
+    <update id="update">
+        UPDATE article SET
+            member_username = #{memberUsername},
+            author = #{author},
+            title = #{title},
+            dogs_id = #{dogsId},
+            dogs_breed = #{dogsBreed},
+            dogs_images = #{dogsImages},
+            content1 = #{content1},
+            content2 = #{content2},
+            event_id = #{eventId},
+            valid = #{valid},
+            article_images = #{articleImages},
+            category_name = #{categoryName}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 刪除文章 -->
+    <delete id="deleteById">
+        DELETE FROM article WHERE id = #{id}
+    </delete>
+
+    <!-- 統計文章總數 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM article
+    </select>
+
+    <!-- 統計有效文章數量 -->
+    <select id="countValid" resultType="long">
+        SELECT COUNT(*) FROM article WHERE valid = 1
+    </select>
+
+</mapper>

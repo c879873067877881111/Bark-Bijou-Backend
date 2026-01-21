@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.OrderDao">
+
+    <resultMap id="OrderResultMap" type="com.smallnine.apiserver.entity.Order">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="orderNumber" column="order_number" />
+        <result property="statusId" column="status_id" />
+        <result property="totalAmount" column="total_amount" />
+        <result property="shippingAmount" column="shipping_amount" />
+        <result property="taxAmount" column="tax_amount" />
+        <result property="discountAmount" column="discount_amount" />
+        <result property="shippingAddress" column="shipping_address" />
+        <result property="billingAddress" column="billing_address" />
+        <result property="notes" column="notes" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, member_id, order_number, status_id, total_amount, shipping_amount,
+        tax_amount, discount_amount, shipping_address, billing_address, 
+        notes, created_at, updated_at
+    </sql>
+
+    <!-- 根據ID查詢訂單 -->
+    <select id="findById" resultMap="OrderResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM orders
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根據訂單號查詢訂單 -->
+    <select id="findByOrderNumber" resultMap="OrderResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM orders
+        WHERE order_number = #{orderNumber}
+    </select>
+
+    <!-- 根據用戶ID查詢訂單列表 -->
+    <select id="findByMemberId" resultMap="OrderResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM orders
+        WHERE member_id = #{memberId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 根據狀態查詢訂單列表 -->
+    <select id="findByStatusId" resultMap="OrderResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM orders
+        WHERE status_id = #{statusId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 創建訂單 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (
+            member_id, order_number, status_id, total_amount, shipping_amount,
+            tax_amount, discount_amount, shipping_address, billing_address, 
+            notes, created_at, updated_at
+        ) VALUES (
+            #{memberId}, #{orderNumber}, #{statusId}, #{totalAmount}, #{shippingAmount},
+            #{taxAmount}, #{discountAmount}, #{shippingAddress}, #{billingAddress},
+            #{notes}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新訂單 -->
+    <update id="update">
+        UPDATE orders SET
+            status_id = #{statusId},
+            total_amount = #{totalAmount},
+            shipping_amount = #{shippingAmount},
+            tax_amount = #{taxAmount},
+            discount_amount = #{discountAmount},
+            shipping_address = #{shippingAddress},
+            billing_address = #{billingAddress},
+            notes = #{notes},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新訂單狀態 -->
+    <update id="updateStatus">
+        UPDATE orders SET
+            status_id = #{statusId},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根據ID刪除訂單 -->
+    <delete id="deleteById">
+        DELETE FROM orders WHERE id = #{id}
+    </delete>
+
+    <!-- 統計用戶訂單數量 -->
+    <select id="countByMemberId" resultType="long">
+        SELECT COUNT(*) FROM orders WHERE member_id = #{memberId}
+    </select>
+
+    <!-- 統計總訂單數量 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM orders
+    </select>
+
+    <!-- 檢查訂單號是否存在 -->
+    <select id="existsByOrderNumber" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM orders WHERE order_number = #{orderNumber}
+    </select>
+
+</mapper>
