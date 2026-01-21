@@ -1,14 +1,16 @@
 package com.smallnine.apiserver.logging.aspect;
 
-import com.smallnine.apiserver.logging.AuditLogger;
-import com.smallnine.apiserver.logging.LogContext;
-import com.smallnine.apiserver.logging.annotation.Auditable;
-import com.smallnine.apiserver.logging.constants.AuditResult;
-import com.smallnine.apiserver.logging.event.AuditEvent;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
@@ -16,10 +18,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.HashMap;
-import java.util.Map;
+import com.smallnine.apiserver.logging.AuditLogger;
+import com.smallnine.apiserver.logging.LogContext;
+import com.smallnine.apiserver.logging.annotation.Auditable;
+import com.smallnine.apiserver.logging.constants.AuditResult;
+import com.smallnine.apiserver.logging.event.AuditEvent;
 
 /**
  * 審計日誌切面
@@ -29,6 +32,8 @@ import java.util.Map;
 @Component
 @Order(1)
 public class AuditLogAspect {
+
+    private static final Logger log = LoggerFactory.getLogger(AuditLogAspect.class);
 
     private final AuditLogger auditLogger;
     private final ExpressionParser spelParser = new SpelExpressionParser();
@@ -99,7 +104,8 @@ public class AuditLogAspect {
 
             auditLogger.log(builder.build());
         } catch (Exception e) {
-            // 審計日誌失敗不應影響業務
+            log.warn("審計日誌記錄失敗: method={}, error={}",
+                    joinPoint.getSignature().toShortString(), e.getMessage());
         }
     }
 
@@ -109,6 +115,8 @@ public class AuditLogAspect {
             Object value = spelParser.parseExpression(expression).getValue(context);
             return value != null ? value.toString() : null;
         } catch (Exception e) {
+            log.warn("SpEL 表達式解析失敗: expression={}, method={}, error={}",
+                    expression, joinPoint.getSignature().toShortString(), e.getMessage());
             return null;
         }
     }
