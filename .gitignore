@@ -2,8 +2,9 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-.env.example
-.env.*
+.env
+.env.local
+.env.*.local
 
 ### STS ###
 .apt_generated
