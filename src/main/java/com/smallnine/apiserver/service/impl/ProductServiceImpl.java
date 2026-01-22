@@ -8,6 +8,7 @@ import com.smallnine.apiserver.entity.Product;
 import com.smallnine.apiserver.exception.BusinessException;
 import com.smallnine.apiserver.logging.annotation.Auditable;
 import com.smallnine.apiserver.logging.constants.AuditAction;
+import com.smallnine.apiserver.utils.SqlSecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -54,7 +55,8 @@ public class ProductServiceImpl {
 
     public List<Product> searchByName(String name, int page, int size) {
         int offset = page * size;
-        return productDao.searchByName(name, offset, size);
+        String safeName = SqlSecurityUtil.escapeLikePattern(name);
+        return productDao.searchByName(safeName, offset, size);
     }
 
     public List<Product> findByPriceRange(BigDecimal minPrice, BigDecimal maxPrice,
@@ -65,7 +67,8 @@ public class ProductServiceImpl {
 
     public List<Product> searchProducts(String keyword, BigDecimal minPrice, BigDecimal maxPrice, int page, int size) {
         int offset = page * size;
-        return productDao.searchProducts(keyword, minPrice, maxPrice, offset, size);
+        String safeKeyword = SqlSecurityUtil.escapeLikePattern(keyword);
+        return productDao.searchProducts(safeKeyword, minPrice, maxPrice, offset, size);
     }
 
     @Transactional

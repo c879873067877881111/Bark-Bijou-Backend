@@ -6,6 +6,7 @@ import com.smallnine.apiserver.dto.BrandRequest;
 import com.smallnine.apiserver.dto.BrandResponse;
 import com.smallnine.apiserver.entity.Brand;
 import com.smallnine.apiserver.exception.BusinessException;
+import com.smallnine.apiserver.utils.SqlSecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -45,7 +46,8 @@ public class BrandServiceImpl {
 
     public List<BrandResponse> searchByName(String name, int page, int size) {
         int offset = page * size;
-        List<Brand> brands = brandDao.searchByName(name, offset, size);
+        String safeName = SqlSecurityUtil.escapeLikePattern(name);
+        List<Brand> brands = brandDao.searchByName(safeName, offset, size);
         return brands.stream()
                 .map(brand -> {
                     BrandResponse response = BrandResponse.fromEntity(brand);

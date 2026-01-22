@@ -1,4 +1,4 @@
-package com.smallnine.apiserver.util;
+package com.smallnine.apiserver.utils;
 
 import org.springframework.stereotype.Component;
 
