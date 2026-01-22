@@ -1,30 +1,10 @@
 package com.smallnine.apiserver.integration;
 
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
 /**
  * 整合測試基類
- * 使用 Testcontainers 自動啟動 PostgreSQL 容器
+ * 使用 Docker 容器中的 PostgreSQL 數據庫（透過 .env 配置）
  */
-@Testcontainers
 public abstract class AbstractIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("test_db")
-            .withUsername("test")
-            .withPassword("test")
-            .withInitScript("schema.sql");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-    }
+    // 數據庫配置由 spring-dotenv 從 .env 文件讀取
+    // 確保 docker-compose up 已啟動 PostgreSQL 容器
 }
