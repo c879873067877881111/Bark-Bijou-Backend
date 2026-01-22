@@ -1,10 +1,11 @@
 package com.smallnine.apiserver.utils;
 
-import org.springframework.stereotype.Component;
+public final class SqlSecurityUtil {
 
-@Component
-public class SqlSecurityUtil {
-    
+    private SqlSecurityUtil() {
+        // Utility class
+    }
+
     /**
      * 轉義LIKE查詢中的特殊字符，防止通配符注入
      * @param input 用戶輸入
@@ -34,9 +35,10 @@ public class SqlSecurityUtil {
         
         // 移除潛在危險字符
         String cleaned = input.trim()
-                .replaceAll("[<>\"'\\\\]", "")  // 移除HTML/SQL特殊字符
-                .substring(0, Math.min(input.length(), maxLength));
-                
+                .replaceAll("[<>\"'\\\\]", "");  // 移除HTML/SQL特殊字符
+        if (cleaned.length() > maxLength) {
+            cleaned = cleaned.substring(0, maxLength);
+        }
         return cleaned.isEmpty() ? null : cleaned;
     }
     
