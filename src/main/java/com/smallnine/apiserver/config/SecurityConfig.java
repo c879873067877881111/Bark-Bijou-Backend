@@ -72,6 +72,7 @@ public class SecurityConfig {
                 "Authorization",
                 "Content-Type",
                 "Accept",
+                "Origin",
                 "X-Requested-With",
                 "Cache-Control"
         ));

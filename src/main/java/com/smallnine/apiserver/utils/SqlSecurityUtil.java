@@ -41,29 +41,4 @@ public final class SqlSecurityUtil {
         }
         return cleaned.isEmpty() ? null : cleaned;
     }
-    
-    /**
-     * 驗證搜索關鍵字
-     * @param keyword 搜索關鍵字
-     * @return 是否有效
-     */
-    public static boolean isValidSearchKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return false;
-        }
-        
-        // 檢查最小長度
-        if (keyword.trim().length() < 2) {
-            return false;
-        }
-        
-        // 檢查最大長度
-        if (keyword.length() > 100) {
-            return false;
-        }
-        
-        // 檢查是否只包含通配符
-        String cleaned = keyword.replaceAll("[%_\\s]", "");
-        return !cleaned.isEmpty();
-    }
 }
