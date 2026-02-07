@@ -81,6 +81,9 @@ src/main/resources/
 ├── application-dev.properties
 ├── application-prod.properties
 └── logback-spring.xml
+
+db/                     # 資料庫 Schema（單一來源）
+└── schema.sql          # 完整建表腳本（Docker init 用）
 ```
 
 ## 開發規範

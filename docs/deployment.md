@@ -51,7 +51,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./bark_bijou.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
   redis:
