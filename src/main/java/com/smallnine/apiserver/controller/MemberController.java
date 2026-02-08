@@ -47,7 +47,7 @@ public class MemberController {
         }
         if (phone != null) user.setPhone(phone);
         if (birth_date != null && !birth_date.isEmpty()) {
-            user.setBirthDate(java.time.LocalDate.parse(birth_date).atStartOfDay());
+            user.setBirthDate(java.time.LocalDate.parse(birth_date));
         }
 
         if (avatar != null && !avatar.isEmpty()) {
