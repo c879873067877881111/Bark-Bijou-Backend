@@ -96,7 +96,8 @@ CREATE TABLE product (
   weight DECIMAL(8,2),
   dimensions VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL
 );
 
 -- 創建商品圖片表
@@ -140,9 +141,22 @@ CREATE TABLE orders (
   discount_amount DECIMAL(10,2) DEFAULT 0,
   shipping_address TEXT,
   billing_address TEXT,
+  recipient_name VARCHAR(100),
+  recipient_phone VARCHAR(20),
+  recipient_email VARCHAR(255),
+  delivery_method VARCHAR(20),
+  city VARCHAR(50),
+  town VARCHAR(50),
+  address TEXT,
+  store_name VARCHAR(100),
+  store_address TEXT,
+  coupon_id INTEGER REFERENCES coupons(id),
+  discount_type VARCHAR(20),
+  discount_value DECIMAL(10,2),
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL
 );
 
 -- 創建訂單項目表
@@ -153,7 +167,14 @@ CREATE TABLE order_items (
   quantity INTEGER NOT NULL,
   unit_price DECIMAL(10,2) NOT NULL,
   total_price DECIMAL(10,2) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  product_name VARCHAR(255),
+  color VARCHAR(50),
+  size VARCHAR(50),
+  packing VARCHAR(50),
+  items_group VARCHAR(50),
+  image VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL
 );
 
 -- 創建購物車表 (重要的缺失表)
@@ -162,6 +183,7 @@ CREATE TABLE cart_items (
   member_id INTEGER NOT NULL REFERENCES member(id),
   product_id INTEGER NOT NULL REFERENCES product(id),
   quantity INTEGER NOT NULL DEFAULT 1,
+  unit_price DECIMAL(10,2),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(member_id, product_id)
@@ -288,21 +310,38 @@ CREATE TABLE notifications (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 創建寵物保姆表 (重要的缺失表)
+-- 創建寵物保姆表
 CREATE TABLE sitters (
   id SERIAL PRIMARY KEY,
   member_id INTEGER NOT NULL REFERENCES member(id),
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  price_per_hour DECIMAL(8,2),
-  location VARCHAR(255),
-  available_from TIME,
-  available_to TIME,
-  is_active BOOLEAN DEFAULT TRUE,
-  rating DECIMAL(2,1) DEFAULT 0,
-  total_bookings INTEGER DEFAULT 0,
+  name VARCHAR(255) NOT NULL,
+  area VARCHAR(100) NOT NULL,
+  service_time TEXT,
+  experience TEXT,
+  introduction TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  avatar_url VARCHAR(500),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 創建保姆圖片集表
+CREATE TABLE sitter_gallery (
+  id SERIAL PRIMARY KEY,
+  sitter_id INTEGER NOT NULL REFERENCES sitters(id) ON DELETE CASCADE,
+  image_url VARCHAR(500) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 創建保姆評論表
+CREATE TABLE sitter_reviews (
+  id SERIAL PRIMARY KEY,
+  member_id INTEGER NOT NULL REFERENCES member(id),
+  sitter_id INTEGER NOT NULL REFERENCES sitters(id) ON DELETE CASCADE,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(member_id, sitter_id)
 );
 
 -- 創建保姆預訂表
@@ -310,15 +349,10 @@ CREATE TABLE sitter_bookings (
   id SERIAL PRIMARY KEY,
   member_id INTEGER NOT NULL REFERENCES member(id),
   sitter_id INTEGER NOT NULL REFERENCES sitters(id),
-  dog_id INTEGER REFERENCES dogs(id),
+  pet_id INTEGER NOT NULL REFERENCES dogs(id),
   start_time TIMESTAMP NOT NULL,
   end_time TIMESTAMP NOT NULL,
-  total_hours INTEGER NOT NULL,
-  total_amount DECIMAL(10,2) NOT NULL,
-  status VARCHAR(20) DEFAULT 'pending',
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 創建商品規格表 (缺失的重要表)
@@ -429,5 +463,9 @@ CREATE INDEX idx_vip_active ON vip_levels(id);
 CREATE INDEX idx_product_sku ON product(sku);
 CREATE INDEX idx_member_email ON member(email);
 CREATE INDEX idx_member_username ON member(username);
+CREATE INDEX idx_sitters_member ON sitters(member_id);
+CREATE INDEX idx_sitter_reviews_sitter ON sitter_reviews(sitter_id);
+CREATE INDEX idx_sitter_bookings_member ON sitter_bookings(member_id);
+CREATE INDEX idx_sitter_bookings_sitter ON sitter_bookings(sitter_id);
 
 COMMIT;
