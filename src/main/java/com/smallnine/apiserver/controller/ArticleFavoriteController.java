@@ -24,6 +24,13 @@ public class ArticleFavoriteController {
 
     private final ArticleFavoriteService articleFavoriteService;
 
+    @Operation(summary = "取得熱門收藏文章（公開）")
+    @GetMapping("/top")
+    public ApiResponse<List<Map<String, Object>>> getTopFavoritedArticles(
+            @RequestParam(defaultValue = "10") int limit) {
+        return ApiResponse.success(articleFavoriteService.getTopFavoritedArticles(limit));
+    }
+
     @Operation(summary = "取得我的收藏文章 ID 列表")
     @GetMapping
     public ApiResponse<List<Long>> getMyFavorites(

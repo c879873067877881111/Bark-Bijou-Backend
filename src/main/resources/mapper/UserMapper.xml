@@ -145,9 +145,7 @@
 
     <!-- 根據重置令牌查詢用戶 -->
     <select id="findByResetToken" resultMap="UserResultMap">
-        SELECT id, role, username, email, password, realname, phone, gender,
-               vip_levels_id, image_url, email_validated, reset_token, reset_token_expiry,
-               created_at, updated_at
+        SELECT <include refid="BaseColumns" />
         FROM member
         WHERE reset_token = #{resetToken}
     </select>

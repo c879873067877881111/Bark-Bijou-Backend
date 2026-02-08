@@ -8,12 +8,13 @@
         <result property="memberId" column="member_id" />
         <result property="productId" column="product_id" />
         <result property="quantity" column="quantity" />
+        <result property="unitPrice" column="unit_price" />
         <result property="createdAt" column="created_at" />
         <result property="updatedAt" column="updated_at" />
     </resultMap>
 
     <sql id="BaseColumns">
-        id, member_id, product_id, quantity, created_at, updated_at
+        id, member_id, product_id, quantity, unit_price, created_at, updated_at
     </sql>
 
     <!-- 根據ID查詢購物車項目 -->
@@ -41,9 +42,9 @@
     <!-- 創建購物車項目 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO cart_items (
-            member_id, product_id, quantity, created_at, updated_at
+            member_id, product_id, quantity, unit_price, created_at, updated_at
         ) VALUES (
-            #{memberId}, #{productId}, #{quantity}, NOW(), NOW()
+            #{memberId}, #{productId}, #{quantity}, #{unitPrice}, NOW(), NOW()
         )
     </insert>
 
@@ -51,6 +52,7 @@
     <update id="update">
         UPDATE cart_items SET
             quantity = #{quantity},
+            unit_price = #{unitPrice},
             updated_at = NOW()
         WHERE id = #{id}
     </update>

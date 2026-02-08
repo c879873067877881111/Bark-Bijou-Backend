@@ -56,7 +56,10 @@ public class SecurityConfig {
                 // Swagger
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/docs/**", "/v3/api-docs/**").permitAll()
 
-                // 收藏類 endpoint 需要認證（必須在 wildcard 之前）
+                // 收藏類公開統計端點（必須在 authenticated 之前）
+                .requestMatchers(HttpMethod.GET, "/api/articles/favorites/top").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/favorites/top").permitAll()
+                // 其餘收藏操作一律需要認證
                 .requestMatchers("/api/articles/favorites/**").authenticated()
                 .requestMatchers("/api/products/favorites/**").authenticated()
 
@@ -85,7 +88,7 @@ public class SecurityConfig {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.setCharacterEncoding("UTF-8");
-                    response.getWriter().write("{\"code\":401,\"message\":\"未登入或令牌已過期\",\"success\":false}");
+                    response.getWriter().write("{\"code\":401,\"message\":\"未登入或令牌已過期\",\"data\":null,\"success\":false}");
                 })
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
