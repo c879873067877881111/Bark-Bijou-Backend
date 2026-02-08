@@ -23,7 +23,7 @@ public class Review {
     
     private String content;
     
-    private Boolean isAnonymous = false;
+    private Boolean isVerifiedPurchase = false;
     
     private LocalDateTime createdAt;
     

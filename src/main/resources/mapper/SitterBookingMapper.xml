@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.SitterBookingDao">
+
+    <resultMap id="SitterBookingResultMap" type="com.smallnine.apiserver.entity.SitterBooking">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="sitterId" column="sitter_id" />
+        <result property="petId" column="pet_id" />
+        <result property="startTime" column="start_time" />
+        <result property="endTime" column="end_time" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="existsByMemberAndSitter" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM sitter_bookings
+        WHERE member_id = #{memberId} AND sitter_id = #{sitterId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sitter_bookings (member_id, sitter_id, pet_id, start_time, end_time, created_at)
+        VALUES (#{memberId}, #{sitterId}, #{petId}, #{startTime}, #{endTime}, NOW())
+    </insert>
+
+    <select id="findById" resultMap="SitterBookingResultMap">
+        SELECT id, member_id, sitter_id, pet_id, start_time, end_time, created_at
+        FROM sitter_bookings
+        WHERE id = #{id}
+    </select>
+
+</mapper>

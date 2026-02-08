@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.SitterReviewDao">
+
+    <resultMap id="SitterReviewResponseMap" type="com.smallnine.apiserver.dto.SitterReviewResponse">
+        <result property="rating" column="rating" />
+        <result property="comment" column="comment" />
+        <result property="username" column="username" />
+        <result property="imageUrl" column="image_url" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="findRecentWithMember" resultMap="SitterReviewResponseMap">
+        SELECT sr.rating, sr.comment, m.username, m.image_url, sr.created_at
+        FROM sitter_reviews sr
+        JOIN member m ON sr.member_id = m.id
+        ORDER BY sr.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findBySitterIdWithMember" resultMap="SitterReviewResponseMap">
+        SELECT sr.rating, sr.comment, m.username, m.image_url, sr.created_at
+        FROM sitter_reviews sr
+        JOIN member m ON sr.member_id = m.id
+        WHERE sr.sitter_id = #{sitterId}
+        ORDER BY sr.created_at DESC
+    </select>
+
+    <select id="getAverageRating" resultType="java.lang.Double">
+        SELECT AVG(rating) FROM sitter_reviews WHERE sitter_id = #{sitterId}
+    </select>
+
+    <select id="countBySitterId" resultType="int">
+        SELECT COUNT(*) FROM sitter_reviews WHERE sitter_id = #{sitterId}
+    </select>
+
+    <select id="existsByMemberAndSitter" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM sitter_reviews
+        WHERE member_id = #{memberId} AND sitter_id = #{sitterId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO sitter_reviews (member_id, sitter_id, rating, comment, created_at)
+        VALUES (#{memberId}, #{sitterId}, #{rating}, #{comment}, NOW())
+    </insert>
+
+</mapper>

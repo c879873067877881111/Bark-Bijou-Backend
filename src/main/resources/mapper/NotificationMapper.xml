@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.NotificationDao">
+
+    <resultMap id="NotificationResultMap" type="com.smallnine.apiserver.entity.Notification">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="title" column="title" />
+        <result property="message" column="message" />
+        <result property="type" column="type" />
+        <result property="isRead" column="is_read" />
+        <result property="actionUrl" column="action_url" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="findByMemberId" resultMap="NotificationResultMap">
+        SELECT * FROM notifications
+        WHERE member_id = #{memberId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="NotificationResultMap">
+        SELECT * FROM notifications WHERE id = #{id}
+    </select>
+
+    <update id="markAsRead">
+        UPDATE notifications SET is_read = TRUE WHERE id = #{id}
+    </update>
+
+    <update id="markAllAsRead">
+        UPDATE notifications SET is_read = TRUE WHERE member_id = #{memberId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM notifications WHERE id = #{id}
+    </delete>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notifications (member_id, message, is_read, created_at)
+        VALUES (#{memberId}, #{message}, #{isRead}, NOW())
+    </insert>
+
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.SitterGalleryDao">
+
+    <resultMap id="SitterGalleryResultMap" type="com.smallnine.apiserver.entity.SitterGallery">
+        <id property="id" column="id" />
+        <result property="sitterId" column="sitter_id" />
+        <result property="imageUrl" column="image_url" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="findBySitterId" resultMap="SitterGalleryResultMap">
+        SELECT id, sitter_id, image_url, created_at
+        FROM sitter_gallery
+        WHERE sitter_id = #{sitterId}
+        ORDER BY created_at ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sitter_gallery (sitter_id, image_url, created_at)
+        VALUES (#{sitterId}, #{imageUrl}, NOW())
+    </insert>
+
+    <delete id="deleteBySitterId">
+        DELETE FROM sitter_gallery WHERE sitter_id = #{sitterId}
+    </delete>
+
+</mapper>

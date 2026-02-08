@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.DogDao">
+
+    <resultMap id="DogResultMap" type="com.smallnine.apiserver.entity.Dog">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="name" column="name" />
+        <result property="breed" column="breed" />
+        <result property="age" column="age" />
+        <result property="weight" column="weight" />
+        <result property="gender" column="gender" />
+        <result property="description" column="description" />
+        <result property="imageUrl" column="image_url" />
+        <result property="medicalNotes" column="medical_notes" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <select id="findByMemberId" resultMap="DogResultMap">
+        SELECT id, member_id, name, breed, age, weight, gender, description, image_url, medical_notes, created_at, updated_at
+        FROM dogs
+        WHERE member_id = #{memberId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="DogResultMap">
+        SELECT id, member_id, name, breed, age, weight, gender, description, image_url, medical_notes, created_at, updated_at
+        FROM dogs
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dogs (member_id, name, breed, age, weight, gender, description, image_url, medical_notes, created_at, updated_at)
+        VALUES (#{memberId}, #{name}, #{breed}, #{age}, #{weight}, #{gender}, #{description}, #{imageUrl}, #{medicalNotes}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE dogs SET
+            name = #{name},
+            breed = #{breed},
+            age = #{age},
+            weight = #{weight},
+            gender = #{gender},
+            description = #{description},
+            image_url = #{imageUrl},
+            medical_notes = #{medicalNotes},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM dogs WHERE id = #{id}
+    </delete>
+
+</mapper>

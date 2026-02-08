@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.ArticleCommentDao">
+
+    <resultMap id="ArticleCommentResultMap" type="com.smallnine.apiserver.entity.ArticleComment">
+        <id property="id" column="id" />
+        <result property="articleId" column="article_id" />
+        <result property="memberId" column="member_id" />
+        <result property="content" column="content" />
+        <result property="createdAt" column="created_at" />
+        <result property="username" column="username" />
+    </resultMap>
+
+    <select id="findByArticleId" resultMap="ArticleCommentResultMap">
+        SELECT c.*, m.username
+        FROM article_comments c
+        LEFT JOIN member m ON c.member_id = m.id
+        WHERE c.article_id = #{articleId}
+        ORDER BY c.created_at DESC
+    </select>
+
+    <select id="findById" resultMap="ArticleCommentResultMap">
+        SELECT * FROM article_comments WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO article_comments (article_id, member_id, content, created_at)
+        VALUES (#{articleId}, #{memberId}, #{content}, NOW())
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM article_comments WHERE id = #{id}
+    </delete>
+
+</mapper>

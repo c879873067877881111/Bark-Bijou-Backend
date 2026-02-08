@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.ProductReviewDao">
+
+    <resultMap id="ReviewResultMap" type="com.smallnine.apiserver.entity.Review">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="productId" column="product_id" />
+        <result property="rating" column="rating" />
+        <result property="content" column="content" />
+        <result property="isVerifiedPurchase" column="is_verified_purchase" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <select id="findByProductId" resultMap="ReviewResultMap">
+        SELECT pr.*, m.username
+        FROM product_reviews pr
+        LEFT JOIN member m ON pr.member_id = m.id
+        WHERE pr.product_id = #{productId}
+        ORDER BY pr.created_at DESC
+    </select>
+
+    <select id="findById" resultMap="ReviewResultMap">
+        SELECT * FROM product_reviews WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_reviews (product_id, member_id, rating, content, is_verified_purchase, created_at, updated_at)
+        VALUES (#{productId}, #{memberId}, #{rating}, #{content}, #{isVerifiedPurchase}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE product_reviews SET
+            rating = #{rating},
+            content = #{content},
+            is_verified_purchase = #{isVerifiedPurchase},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM product_reviews WHERE id = #{id}
+    </delete>
+
+</mapper>

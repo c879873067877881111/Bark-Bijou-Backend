@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smallnine.apiserver.dao.PointsDao">
+
+    <resultMap id="PointsResultMap" type="com.smallnine.apiserver.entity.Points">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="points" column="points" />
+        <result property="description" column="description" />
+        <result property="referenceId" column="reference_id" />
+        <result property="referenceType" column="reference_type" />
+        <result property="expiresAt" column="expires_at" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="findByMemberId" resultMap="PointsResultMap">
+        SELECT * FROM points
+        WHERE member_id = #{memberId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="sumByMemberId" resultType="int">
+        SELECT COALESCE(SUM(points), 0) FROM points
+        WHERE member_id = #{memberId}
+          AND (expires_at IS NULL OR expires_at > NOW())
+    </select>
+
+</mapper>
