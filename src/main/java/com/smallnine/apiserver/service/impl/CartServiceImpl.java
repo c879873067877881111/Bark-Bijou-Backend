@@ -3,6 +3,7 @@ package com.smallnine.apiserver.service.impl;
 import com.smallnine.apiserver.constants.enums.ResponseCode;
 import com.smallnine.apiserver.dao.CartItemDao;
 import com.smallnine.apiserver.dao.ProductDao;
+import com.smallnine.apiserver.dto.CartValidationResult;
 import com.smallnine.apiserver.entity.CartItem;
 import com.smallnine.apiserver.entity.Product;
 import com.smallnine.apiserver.exception.BusinessException;
@@ -213,5 +214,57 @@ public class CartServiceImpl implements CartService {
         }
         
         return true;
+    }
+
+    @Override
+    public CartValidationResult validateCart(Long memberId) {
+        CartValidationResult result = new CartValidationResult();
+        List<CartItem> cartItems = cartItemDao.findByMemberId(memberId);
+
+        for (CartItem item : cartItems) {
+            Optional<Product> productOpt = productDao.findById(item.getProductId());
+            if (productOpt.isEmpty()) {
+                result.addError(CartValidationResult.ErrorType.PRODUCT_NOT_FOUND,
+                        item.getProductId(), "商品不存在");
+                continue;
+            }
+
+            Product product = productOpt.get();
+            if (!product.getIsActive()) {
+                result.addError(CartValidationResult.ErrorType.PRODUCT_INACTIVE,
+                        item.getProductId(), "商品已下架");
+                continue;
+            }
+
+            if (product.getStockQuantity() < item.getQuantity()) {
+                result.addError(CartValidationResult.ErrorType.OUT_OF_STOCK,
+                        item.getProductId(), "庫存不足");
+            }
+
+            BigDecimal currentPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getPrice();
+            if (currentPrice.compareTo(item.getUnitPrice()) != 0) {
+                result.addError(CartValidationResult.ErrorType.PRICE_CHANGED,
+                        item.getProductId(), "價格已變更");
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public void refreshCartPrices(Long memberId) {
+        List<CartItem> cartItems = cartItemDao.findByMemberId(memberId);
+
+        for (CartItem item : cartItems) {
+            productDao.findById(item.getProductId()).ifPresent(product -> {
+                BigDecimal currentPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getPrice();
+                if (currentPrice.compareTo(item.getUnitPrice()) != 0) {
+                    item.setUnitPrice(currentPrice);
+                    item.setUpdatedAt(LocalDateTime.now());
+                    cartItemDao.update(item);
+                }
+            });
+        }
     }
 }

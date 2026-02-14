@@ -7,6 +7,8 @@ import com.smallnine.apiserver.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.VipLevelService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -21,50 +23,41 @@ public class VipLevelServiceImpl implements VipLevelService {
     
     private final VipLevelDao vipLevelDao;
     
-    /**
-     * 根據ID查詢VIP等級
-     */
+    @Cacheable(value = "vipLevels", key = "'id:' + #id")
     public VipLevel findById(Long id) {
         return vipLevelDao.findById(id)
                 .orElseThrow(() -> new BusinessException(ResponseCode.VIP_LEVEL_NOT_FOUND));
     }
     
-    /**
-     * 根據名稱查詢VIP等級
-     */
+    @Cacheable(value = "vipLevels", key = "'name:' + #name")
     public VipLevel findByName(String name) {
         return vipLevelDao.findByName(name)
                 .orElseThrow(() -> new BusinessException(ResponseCode.VIP_LEVEL_NOT_FOUND));
     }
     
-    /**
-     * 查詢所有啟用的VIP等級
-     */
+    @Cacheable(value = "vipLevels", key = "'allActive'")
     public List<VipLevel> findAllActive() {
         return vipLevelDao.findAllActive();
     }
     
-    /**
-     * 查詢所有VIP等級
-     */
+    @Cacheable(value = "vipLevels", key = "'all'")
     public List<VipLevel> findAll() {
         return vipLevelDao.findAll();
     }
     
-    /**
-     * 根據消費金額獲取匹配的VIP等級
-     */
     public VipLevel getVipLevelBySpending(BigDecimal spending) {
         if (spending == null || spending.compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException(ResponseCode.INVALID_SPENDING_AMOUNT);
         }
-        
-        return vipLevelDao.findBySpending(spending).orElse(null);
+
+        // Use cached findAllActive() and compute in app — avoids BigDecimal cache key issues
+        return findAllActive().stream()
+                .filter(v -> spending.compareTo(v.getMinSpending()) >= 0)
+                .reduce((a, b) -> b.getMinSpending().compareTo(a.getMinSpending()) > 0 ? b : a)
+                .orElse(null);
     }
     
-    /**
-     * 創建VIP等級
-     */
+    @CacheEvict(value = "vipLevels", allEntries = true)
     @Transactional
     public VipLevel createVipLevel(VipLevel vipLevel) {
         validateVipLevel(vipLevel);
@@ -88,9 +81,7 @@ public class VipLevelServiceImpl implements VipLevelService {
         return vipLevel;
     }
     
-    /**
-     * 更新VIP等級
-     */
+    @CacheEvict(value = "vipLevels", allEntries = true)
     @Transactional
     public VipLevel updateVipLevel(VipLevel vipLevel) {
         VipLevel existing = findById(vipLevel.getId());
@@ -111,9 +102,7 @@ public class VipLevelServiceImpl implements VipLevelService {
         return findById(vipLevel.getId());
     }
     
-    /**
-     * 刪除VIP等級
-     */
+    @CacheEvict(value = "vipLevels", allEntries = true)
     @Transactional
     public void deleteVipLevel(Long id) {
         VipLevel vipLevel = findById(id);

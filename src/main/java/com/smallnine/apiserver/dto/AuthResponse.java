@@ -32,8 +32,8 @@ public class AuthResponse {
     @Schema(description = "信箱", example = "john@example.com")
     private String email;
     
-    @Schema(description = "全名", example = "John Doe")
-    private String fullName;
+    @Schema(description = "真實姓名", example = "王小明")
+    private String realname;
     
     @Schema(description = "性別", example = "male")
     private User.Gender gender;
@@ -47,7 +47,7 @@ public class AuthResponse {
         this.id = user.getId();
         this.username = user.getUsername();
         this.email = user.getEmail();
-        this.fullName = user.getRealname();
+        this.realname = user.getRealname();
         this.gender = user.getGender();
         this.expiresAt = expiresAt;
     }

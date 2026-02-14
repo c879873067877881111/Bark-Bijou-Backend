@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.CartService;
 import com.smallnine.apiserver.service.OrderService;
 import com.smallnine.apiserver.service.ProductService;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductDao productDao;
     private final CartService cartService;
     private final ProductService productService;
+    private final RedisTemplate<String, Object> redisTemplate;
     
     /**
      * 根據ID查詢訂單（內部使用，無授權檢查）
@@ -162,7 +165,42 @@ public class OrderServiceImpl implements OrderService {
         log.info("訂單創建完成: orderId={}, totalAmount={}", order.getId(), totalAmount);
         return order;
     }
-    
+
+    @Override
+    @Transactional
+    public Order createOrderFromCart(Long memberId, String shippingAddress, String notes, String idempotencyKey) {
+        if (idempotencyKey == null) {
+            return createOrderFromCart(memberId, shippingAddress, notes);
+        }
+
+        String redisKey = "order:idempotency:" + memberId + ":" + idempotencyKey;
+
+        // SETNX 原子佔位，防止並行請求同時通過
+        Boolean acquired = redisTemplate.opsForValue()
+                .setIfAbsent(redisKey, "PENDING", 24, TimeUnit.HOURS);
+
+        if (Boolean.FALSE.equals(acquired)) {
+            // 鍵已存在，查回已建立的訂單
+            Object existingOrderId = redisTemplate.opsForValue().get(redisKey);
+            if (existingOrderId != null && !"PENDING".equals(existingOrderId.toString())) {
+                return orderDao.findById(Long.parseLong(existingOrderId.toString()))
+                        .orElseThrow(() -> new BusinessException(ResponseCode.ORDER_NOT_FOUND));
+            }
+            throw new BusinessException(ResponseCode.CONFLICT, "訂單正在建立中，請稍後重試");
+        }
+
+        try {
+            Order order = createOrderFromCart(memberId, shippingAddress, notes);
+            // 建單成功，將 PENDING 替換成實際訂單 ID
+            redisTemplate.opsForValue().set(redisKey, order.getId().toString(), 24, TimeUnit.HOURS);
+            return order;
+        } catch (Exception e) {
+            // 建單失敗，釋放佔位鍵
+            redisTemplate.delete(redisKey);
+            throw e;
+        }
+    }
+
     /**
      * 更新訂單狀態
      */
@@ -172,11 +210,24 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = findByIdInternal(orderId);
         
-        // 驗證狀態轉換是否合法（此處可以加入狀態機邏輯）
         if (order.getStatusId().equals(statusId)) {
             throw new BusinessException(ResponseCode.ORDER_STATUS_ERROR, "訂單狀態未發生變化");
         }
-        
+
+        OrderStatus currentStatus;
+        OrderStatus newStatus;
+        try {
+            currentStatus = OrderStatus.fromId(order.getStatusId());
+            newStatus = OrderStatus.fromId(statusId);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ResponseCode.ORDER_STATUS_ERROR, "無效的訂單狀態");
+        }
+
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new BusinessException(ResponseCode.ORDER_INVALID_TRANSITION,
+                    "無法從 " + currentStatus.getDescription() + " 轉換到 " + newStatus.getDescription());
+        }
+
         int updatedRows = orderDao.updateStatus(orderId, statusId);
         if (updatedRows == 0) {
             throw new BusinessException(ResponseCode.ORDER_NOT_FOUND);

@@ -10,6 +10,8 @@ import com.smallnine.apiserver.utils.SqlSecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.BrandService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,16 +26,19 @@ public class BrandServiceImpl implements BrandService {
 
     private final BrandDao brandDao;
 
+    @Cacheable(value = "brands", key = "'id:' + #id")
     public Brand findById(Long id) {
         return brandDao.findById(id)
                 .orElseThrow(() -> new BusinessException(ResponseCode.BRAND_NOT_FOUND));
     }
 
+    @Cacheable(value = "brands", key = "'list:' + #page + ':' + #size")
     public List<Brand> findAll(int page, int size) {
         int offset = page * size;
         return brandDao.findAll(offset, size);
     }
 
+    @Cacheable(value = "brands", key = "'all:' + #page + ':' + #size")
     public List<BrandResponse> findAllBrands(int page, int size) {
         List<Brand> brands = findAll(page, size);
         return brands.stream()
@@ -58,6 +63,7 @@ public class BrandServiceImpl implements BrandService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "brands", allEntries = true)
     @Transactional
     public Brand createBrand(BrandRequest request) {
         if (brandDao.existsByName(request.getName())) {
@@ -76,6 +82,7 @@ public class BrandServiceImpl implements BrandService {
         return brand;
     }
 
+    @CacheEvict(value = "brands", allEntries = true)
     @Transactional
     public Brand updateBrand(Long id, BrandRequest request) {
         Brand existingBrand = findById(id);
@@ -95,6 +102,7 @@ public class BrandServiceImpl implements BrandService {
         return existingBrand;
     }
 
+    @CacheEvict(value = "brands", allEntries = true)
     @Transactional
     public void deleteBrand(Long id) {
         Brand brand = findById(id);
@@ -116,6 +124,7 @@ public class BrandServiceImpl implements BrandService {
         return brandDao.countProductsByBrandId(brandId);
     }
 
+    @Cacheable(value = "brands", key = "'response:' + #id")
     public BrandResponse getBrandResponse(Long id) {
         Brand brand = findById(id);
         BrandResponse response = BrandResponse.fromEntity(brand);

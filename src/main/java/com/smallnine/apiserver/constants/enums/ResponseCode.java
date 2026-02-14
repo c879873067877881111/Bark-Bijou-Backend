@@ -33,6 +33,7 @@ public enum ResponseCode {
     // 業務異常 - 訂單相關
     ORDER_NOT_FOUND(3001, "訂單不存在", HttpStatus.NOT_FOUND),
     ORDER_STATUS_ERROR(3002, "訂單狀態錯誤", HttpStatus.BAD_REQUEST),
+    ORDER_INVALID_TRANSITION(3005, "無效的訂單狀態轉換", HttpStatus.BAD_REQUEST),
     CART_EMPTY(3003, "購物車為空", HttpStatus.BAD_REQUEST),
     INVALID_PAGINATION(3004, "無效的分頁參數", HttpStatus.BAD_REQUEST),
 
@@ -54,7 +55,39 @@ public enum ResponseCode {
     INVALID_MIN_SPENDING(5009, "最低消費金額無效", HttpStatus.BAD_REQUEST),
     INVALID_DISCOUNT_RATE(5010, "折扣率必須在0-1之間", HttpStatus.BAD_REQUEST),
     INVALID_POINTS_MULTIPLIER(5011, "積分倍數必須大於0", HttpStatus.BAD_REQUEST),
-    INVALID_FREE_SHIPPING_THRESHOLD(5012, "免運費門檻無效", HttpStatus.BAD_REQUEST);
+    INVALID_FREE_SHIPPING_THRESHOLD(5012, "免運費門檻無效", HttpStatus.BAD_REQUEST),
+
+    // 業務異常 - 保母相關
+    SITTER_NOT_FOUND(6001, "保母不存在", HttpStatus.NOT_FOUND),
+    SITTER_ALREADY_EXISTS(6002, "已註冊為保母", HttpStatus.CONFLICT),
+    SITTER_FORBIDDEN(6003, "無權限操作此保母資料", HttpStatus.FORBIDDEN),
+
+    // 業務異常 - 寵物相關
+    DOG_NOT_FOUND(6006, "寵物不存在", HttpStatus.NOT_FOUND),
+
+    // 業務異常 - 優惠券相關
+    COUPON_NOT_FOUND(7001, "優惠券不存在", HttpStatus.NOT_FOUND),
+    COUPON_ALREADY_CLAIMED(7002, "已領取過此優惠券", HttpStatus.CONFLICT),
+    COUPON_EXPIRED(7003, "優惠券已過期", HttpStatus.BAD_REQUEST),
+
+    // 業務異常 - 通知相關
+    NOTIFICATION_NOT_FOUND(7501, "通知不存在", HttpStatus.NOT_FOUND),
+
+    // 業務異常 - OTP 相關
+    OTP_INVALID(7601, "驗證碼錯誤", HttpStatus.BAD_REQUEST),
+    OTP_EXPIRED(7602, "驗證碼已過期", HttpStatus.BAD_REQUEST),
+
+    // 業務異常 - 收藏/評價相關
+    FAVORITE_ALREADY_EXISTS(8001, "已收藏過", HttpStatus.CONFLICT),
+    REVIEW_NOT_FOUND(8003, "評價不存在", HttpStatus.NOT_FOUND),
+    REVIEW_ALREADY_EXISTS(8004, "已評價過", HttpStatus.CONFLICT),
+    REVIEW_NO_BOOKING(8005, "尚未預約無法評價", HttpStatus.BAD_REQUEST),
+
+    // 業務異常 - 收件人相關
+    RECIPIENT_NOT_FOUND(8101, "收件人不存在", HttpStatus.NOT_FOUND),
+
+    // 業務異常 - 郵件相關
+    MAIL_SEND_FAILED(9001, "郵件發送失敗", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;

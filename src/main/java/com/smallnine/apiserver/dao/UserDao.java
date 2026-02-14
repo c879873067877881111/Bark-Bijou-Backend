@@ -79,4 +79,19 @@ public interface UserDao {
      * 根據重置令牌查詢用戶
      */
     Optional<User> findByResetToken(@Param("resetToken") String resetToken);
+
+    /**
+     * 更新會員資料
+     */
+    int updateProfile(User user);
+
+    /**
+     * 更新密碼
+     */
+    int updatePassword(@Param("id") Long id, @Param("password") String password);
+
+    /**
+     * 根據 Google UID 查詢用戶
+     */
+    Optional<User> findByGoogleUid(@Param("googleUid") String googleUid);
 }

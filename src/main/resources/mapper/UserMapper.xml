@@ -31,7 +31,10 @@
 
     <sql id="BaseColumns">
         id, role, username, email, password, realname, phone, gender,
-        vip_levels_id, image_url, email_validated, created_at, updated_at
+        birth_date, vip_levels_id, image_url, email_validated,
+        google_uid, google_name, city, address, zip,
+        reset_token, reset_token_expiry, reset_token_secret,
+        image_updated_at, created_at, updated_at
     </sql>
 
     <!-- 根據ID查詢用戶 -->
@@ -142,11 +145,38 @@
 
     <!-- 根據重置令牌查詢用戶 -->
     <select id="findByResetToken" resultMap="UserResultMap">
-        SELECT id, role, username, email, password, realname, phone, gender,
-               vip_levels_id, image_url, email_validated, reset_token, reset_token_expiry,
-               created_at, updated_at
+        SELECT <include refid="BaseColumns" />
         FROM member
         WHERE reset_token = #{resetToken}
+    </select>
+
+    <!-- 更新會員資料 -->
+    <update id="updateProfile">
+        UPDATE member SET
+            username = #{username},
+            realname = #{realname},
+            email = #{email},
+            phone = #{phone},
+            gender = #{gender},
+            birth_date = #{birthDate},
+            image_url = #{imageUrl},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新密碼 -->
+    <update id="updatePassword">
+        UPDATE member SET
+            password = #{password},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根據 Google UID 查詢用戶 -->
+    <select id="findByGoogleUid" resultMap="UserResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM member
+        WHERE google_uid = #{googleUid}
     </select>
 
 </mapper>

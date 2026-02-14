@@ -1,5 +1,6 @@
 package com.smallnine.apiserver.service;
 
+import com.smallnine.apiserver.dto.CartValidationResult;
 import com.smallnine.apiserver.entity.CartItem;
 
 import java.math.BigDecimal;
@@ -24,4 +25,8 @@ public interface CartService {
     long countCartItems(Long memberId);
 
     boolean validateCartStock(Long memberId);
+
+    CartValidationResult validateCart(Long memberId);
+
+    void refreshCartPrices(Long memberId);
 }

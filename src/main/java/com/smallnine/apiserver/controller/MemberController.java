@@ -32,6 +32,7 @@ public class MemberController {
     public ResponseEntity<Map<String, Object>> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String username,
+            @RequestParam(required = false) String realname,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String birth_date,
             @RequestParam(required = false) String gender,
@@ -41,13 +42,14 @@ public class MemberController {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
 
         if (username != null) user.setUsername(username);
+        if (realname != null) user.setRealname(realname);
         if (email != null) user.setEmail(email);
         if (gender != null) {
             try { user.setGender(User.Gender.valueOf(gender)); } catch (Exception ignored) {}
         }
         if (phone != null) user.setPhone(phone);
         if (birth_date != null && !birth_date.isEmpty()) {
-            user.setBirthDate(java.time.LocalDate.parse(birth_date).atStartOfDay());
+            user.setBirthDate(java.time.LocalDate.parse(birth_date));
         }
 
         if (avatar != null && !avatar.isEmpty()) {

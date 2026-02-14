@@ -11,6 +11,7 @@ import com.smallnine.apiserver.exception.ResourceNotFoundException;
 import com.smallnine.apiserver.exception.TokenRefreshException;
 import com.smallnine.apiserver.logging.AuditLogger;
 import com.smallnine.apiserver.logging.LogContext;
+import com.smallnine.apiserver.service.MailService;
 import com.smallnine.apiserver.service.RefreshTokenService;
 import com.smallnine.apiserver.dao.UserDao;
 import com.smallnine.apiserver.utils.JwtUtil;
@@ -39,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final AuditLogger auditLogger;
+    private final MailService mailService;
     
     @Transactional
     public UserResponse register(RegisterRequest request) {
@@ -75,9 +77,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("action=register username={} user_id={} result=success",
                 user.getUsername(), user.getId());
 
-        // TODO: 實際發送驗證郵件（需要配置郵件服務）
-        // 目前先記錄驗證連結到日誌，方便開發測試
-        log.debug("Email verification token generated: {}...", verificationToken.substring(0, 8));
+        mailService.sendVerificationEmail(user.getEmail(), verificationToken);
 
         return new UserResponse(user);
     }
@@ -202,8 +202,7 @@ public class AuthServiceImpl implements AuthService {
         user.setResetTokenExpiry(LocalDateTime.now().plusHours(24));
         userDao.update(user);
 
-        // TODO: 實際發送驗證郵件
-        log.debug("Email verification token generated: {}...", verificationToken.substring(0, 8));
+        mailService.sendVerificationEmail(user.getEmail(), verificationToken);
     }
 
     private String generateSecureToken() {

@@ -10,6 +10,8 @@ import com.smallnine.apiserver.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.CategoryService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +27,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryDao categoryDao;
     private final ProductDao productDao;
 
-    @org.springframework.cache.annotation.Cacheable(value = "categories", key = "#id")
+    @Cacheable(value = "categories", key = "'id:' + #id")
     public Category findById(Long id) {
         return categoryDao.findById(id)
                 .orElseThrow(() -> new BusinessException(ResponseCode.CATEGORY_NOT_FOUND));
@@ -41,6 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryDao.findActiveCategories(offset, size);
     }
 
+    @Cacheable(value = "categories", key = "'top'")
     public List<CategoryResponse> findTopCategories() {
         List<Category> topCategories = categoryDao.findTopCategories();
         return topCategories.stream()
@@ -52,6 +55,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "categories", key = "'tree'")
     public List<CategoryResponse> getCategoryTree() {
         List<Category> topCategories = categoryDao.findTopCategories();
         return topCategories.stream()
@@ -59,6 +63,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "categories", key = "'parent:' + #parentId")
     public List<CategoryResponse> findByParentId(Long parentId) {
         List<Category> categories = categoryDao.findByParentId(parentId);
         return categories.stream()
@@ -70,6 +75,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public Category createCategory(CategoryRequest request) {
         if (categoryDao.existsByName(request.getName())) {
@@ -98,6 +104,7 @@ public class CategoryServiceImpl implements CategoryService {
         return category;
     }
 
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public Category updateCategory(Long id, CategoryRequest request) {
         Category existingCategory = findById(id);
@@ -129,6 +136,7 @@ public class CategoryServiceImpl implements CategoryService {
         return existingCategory;
     }
 
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public void deleteCategory(Long id) {
         Category category = findById(id);
@@ -146,6 +154,7 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("action=DELETE_CATEGORY id={} name={}", id, category.getName());
     }
 
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public void updateCategoryStatus(Long id, Boolean isActive) {
         Category category = findById(id);

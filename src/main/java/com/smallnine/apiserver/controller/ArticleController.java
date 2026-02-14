@@ -9,12 +9,19 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.smallnine.apiserver.entity.User;
+import com.smallnine.apiserver.utils.AuthUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -97,8 +104,30 @@ public class ArticleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "請求參數錯誤")
     })
     public ApiResponse<Article> createArticle(
-            @Parameter(description = "文章訊息", required = true)
-            @Valid @RequestBody Article article) {
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @ModelAttribute Article article,
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "images", required = false) List<MultipartFile> images) {
+        User user = AuthUtils.getAuthenticatedUser(userDetails);
+        article.setMemberId(user.getId());
+        article.setMemberUsername(user.getUsername());
+        article.setAuthor(user.getUsername());
+        article.setCreatedId(user.getId());
+        if (category != null && article.getCategoryName() == null) {
+            article.setCategoryName(category);
+        }
+        if (images != null && !images.isEmpty()) {
+            String imageNames = images.stream()
+                    .filter(f -> !f.isEmpty())
+                    .map(f -> {
+                        String orig = f.getOriginalFilename();
+                        String ext = (orig != null && orig.contains("."))
+                                ? orig.substring(orig.lastIndexOf('.')) : "";
+                        return UUID.randomUUID() + ext;
+                    })
+                    .collect(Collectors.joining(","));
+            article.setArticleImages(imageNames);
+        }
         Article createdArticle = articleService.createArticle(article);
         return ApiResponse.success(createdArticle, ResponseCode.CREATED);
     }

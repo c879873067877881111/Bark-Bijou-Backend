@@ -17,6 +17,8 @@ public interface OrderService {
 
     Order createOrderFromCart(Long memberId, String shippingAddress, String notes);
 
+    Order createOrderFromCart(Long memberId, String shippingAddress, String notes, String idempotencyKey);
+
     void updateOrderStatus(Long orderId, Long statusId);
 
     void cancelOrder(Long orderId, Long memberId);
