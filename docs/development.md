@@ -3,7 +3,7 @@
 ## 環境設置
 
 ### 開發環境要求
-- Java 21+
+- Java 17+
 - Maven 3.6+
 - Docker & Docker Compose
 - IDE: IntelliJ IDEA 或 Visual Studio Code
@@ -23,7 +23,7 @@ docker-compose up -d postgres redis
 
 3. **配置 IDE**
 - 匯入 Maven 專案
-- 設置 JDK 21
+- 設置 JDK 17
 - 安裝必要插件:Spring Boot, MyBatis
 
 4. **運行應用**

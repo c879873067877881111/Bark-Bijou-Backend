@@ -22,13 +22,13 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     /**
-     * 業務異常處理
+     * 業務例外處理
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(
             BusinessException ex, WebRequest request) {
 
-        log.warn("業務異常: code={}, message={}, 請求: {}", ex.getCode(), ex.getMessage(), request.getDescription(false));
+        log.warn("業務例外: code={}, message={}, 請求: {}", ex.getCode(), ex.getMessage(), request.getDescription(false));
 
         ApiResponse<Void> response = ApiResponse.error(ex.getCode(), ex.getMessage());
         HttpStatus status = ResponseCode.fromCode(ex.getCode()).getHttpStatus();
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 資源不存在異常處理
+     * 資源不存在例外處理
      */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 資源重複異常處理
+     * 資源重複例外處理
      */
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ApiResponse<Void>> handleDuplicateResourceException(
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 參數驗證異常處理
+     * 參數驗證例外處理
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
@@ -85,20 +85,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 資料庫約束違反異常處理
+     * 資料庫約束違反例外處理
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(
             DataIntegrityViolationException ex, WebRequest request) {
 
-        log.error("數據庫約束違反: {}, 請求: {}", ex.getMessage(), request.getDescription(false));
+        log.error("資料庫約束違反: {}, 請求: {}", ex.getMessage(), request.getDescription(false));
 
-        String message = "數據操作失敗,請檢查數據完整性";
+        String message = "資料操作失敗,請檢查資料完整性";
         if (ex.getMessage() != null) {
             if (ex.getMessage().contains("unique")) {
-                message = "數據已存在,不能重複";
+                message = "資料已存在,不能重複";
             } else if (ex.getMessage().contains("foreign key")) {
-                message = "存在關聯數據,無法刪除";
+                message = "存在關聯資料,無法刪除";
             }
         }
 
@@ -107,7 +107,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 帳號停用異常處理
+     * 帳號停用例外處理
      */
     @ExceptionHandler(AccountDisabledException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccountDisabledException(
@@ -120,7 +120,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Token 刷新異常處理
+     * Token 更新例外處理
      */
     @ExceptionHandler(TokenRefreshException.class)
     public ResponseEntity<ApiResponse<Void>> handleTokenRefreshException(
@@ -133,7 +133,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 認證異常處理
+     * 認證例外處理
      */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(
@@ -146,7 +146,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 授權異常處理
+     * 授權例外處理
      */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
@@ -160,29 +160,29 @@ public class GlobalExceptionHandler {
 
 
     /**
-     * 運行時異常處理
+     * 執行期例外處理
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {
 
-        log.error("運行時異常: {}, 請求: {}", ex.getMessage(), request.getDescription(false), ex);
+        log.error("執行期例外: {}, 請求: {}", ex.getMessage(), request.getDescription(false), ex);
 
         ApiResponse<Void> response = ApiResponse.error(
                 ResponseCode.INTERNAL_SERVER_ERROR.getCode(),
-                "系統處理異常,請稍後重試");
+                "系統處理例外,請稍後重試");
 
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
-     * 其他所有異常處理
+     * 其他所有例外處理
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(
             Exception ex, WebRequest request) {
 
-        log.error("系統異常: {}, 請求: {}", ex.getMessage(), request.getDescription(false), ex);
+        log.error("系統例外: {}, 請求: {}", ex.getMessage(), request.getDescription(false), ex);
 
         ApiResponse<Void> response = ApiResponse.error(ResponseCode.INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);

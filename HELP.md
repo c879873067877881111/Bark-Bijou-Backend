@@ -3,7 +3,7 @@
 ## 快速開始
 
 ### 環境要求
-- **Java 21+** (推薦使用 OpenJDK 21)
+- **Java 17+** (推薦使用 OpenJDK 17)
 - **Docker & Docker Compose** (用於數據庫服務)
 - **Maven 3.6+** (項目構建工具)
 

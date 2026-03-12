@@ -50,11 +50,17 @@ public class VipLevelServiceImpl implements VipLevelService {
             throw new BusinessException(ResponseCode.INVALID_SPENDING_AMOUNT);
         }
 
-        // Use cached findAllActive() and compute in app — avoids BigDecimal cache key issues
-        return findAllActive().stream()
-                .filter(v -> spending.compareTo(v.getMinSpending()) >= 0)
-                .reduce((a, b) -> b.getMinSpending().compareTo(a.getMinSpending()) > 0 ? b : a)
-                .orElse(null);
+        // 用快取的 findAllActive() 在記憶體計算，避免 BigDecimal 無法作為快取 key 的問題
+        // 找出消費門檻最高且不超過 spending 的等級（即最優惠的那一級）
+        VipLevel best = null;
+        for (VipLevel level : findAllActive()) {
+            if (spending.compareTo(level.getMinSpending()) >= 0) {
+                if (best == null || level.getMinSpending().compareTo(best.getMinSpending()) > 0) {
+                    best = level;
+                }
+            }
+        }
+        return best;
     }
     
     @CacheEvict(value = "vipLevels", allEntries = true)
@@ -84,7 +90,7 @@ public class VipLevelServiceImpl implements VipLevelService {
     @CacheEvict(value = "vipLevels", allEntries = true)
     @Transactional
     public VipLevel updateVipLevel(VipLevel vipLevel) {
-        VipLevel existing = findById(vipLevel.getId());
+        findById(vipLevel.getId());
         validateVipLevel(vipLevel);
         
         // 檢查名稱是否與其他記錄衝突

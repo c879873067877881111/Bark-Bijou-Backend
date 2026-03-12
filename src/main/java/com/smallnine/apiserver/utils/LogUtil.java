@@ -54,7 +54,7 @@ public class LogUtil {
     }
     
     /**
-     * 設置請求信息
+     * 設定請求資訊
      */
     public static void setRequestInfo(String method, String uri, String clientIp) {
         MDC.put(REQUEST_METHOD, method);
@@ -63,7 +63,7 @@ public class LogUtil {
     }
     
     /**
-     * 清除所有MDC信息
+     * 清除所有MDC資訊
      */
     public static void clear() {
         MDC.clear();
@@ -77,21 +77,21 @@ public class LogUtil {
     }
     
     /**
-     * 記錄API調用日誌
+     * 記錄API呼叫日誌
      */
     public static void logApiCall(Logger logger, String method, String uri, long duration) {
-        logger.info("API調用: {} {} - 耗時: {}ms", method, uri, duration);
+        logger.info("API呼叫: {} {} - 耗時: {}ms", method, uri, duration);
     }
     
     /**
-     * 記錄數據庫操作日誌
+     * 記錄資料庫操作日誌
      */
     public static void logDatabase(Logger logger, String operation, String table, Object id) {
-        logger.debug("數據庫操作: {} - 表: {} - ID: {}", operation, table, id);
+        logger.debug("資料庫操作: {} - 表: {} - ID: {}", operation, table, id);
     }
     
     /**
-     * 記錄異常日誌
+     * 記錄例外日誌
      */
     public static void logError(Logger logger, String operation, Exception e) {
         logger.error("操作失敗: {} - 錯誤: {}", operation, e.getMessage(), e);
@@ -102,9 +102,9 @@ public class LogUtil {
      */
     public static void logPerformance(Logger logger, String operation, long duration, Object... params) {
         if (duration > 1000) {
-            logger.warn("性能警告: {} - 耗時: {}ms - 參數: {}", operation, duration, params);
+            logger.warn("效能警告: {} - 耗時: {}ms - 參數: {}", operation, duration, params);
         } else {
-            logger.debug("性能記錄: {} - 耗時: {}ms - 參數: {}", operation, duration, params);
+            logger.debug("效能記錄: {} - 耗時: {}ms - 參數: {}", operation, duration, params);
         }
     }
     

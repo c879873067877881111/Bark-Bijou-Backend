@@ -68,7 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     log.warn("JWT 驗證失敗: uri={}, user={}", request.getRequestURI(), username);
                 }
             } catch (Exception e) {
-                log.warn("JWT 認證過程異常: uri={}, user={}, error={}: {}",
+                log.warn("JWT 認證過程例外: uri={}, user={}, error={}: {}",
                         request.getRequestURI(), username, e.getClass().getSimpleName(), e.getMessage());
             }
         }

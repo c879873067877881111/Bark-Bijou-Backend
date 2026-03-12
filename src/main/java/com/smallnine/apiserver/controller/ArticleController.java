@@ -19,9 +19,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -117,16 +117,15 @@ public class ArticleController {
             article.setCategoryName(category);
         }
         if (images != null && !images.isEmpty()) {
-            String imageNames = images.stream()
-                    .filter(f -> !f.isEmpty())
-                    .map(f -> {
-                        String orig = f.getOriginalFilename();
-                        String ext = (orig != null && orig.contains("."))
-                                ? orig.substring(orig.lastIndexOf('.')) : "";
-                        return UUID.randomUUID() + ext;
-                    })
-                    .collect(Collectors.joining(","));
-            article.setArticleImages(imageNames);
+            List<String> imageNames = new ArrayList<>();
+            for (MultipartFile f : images) {
+                if (f.isEmpty()) continue;
+                String orig = f.getOriginalFilename();
+                String ext = (orig != null && orig.contains("."))
+                        ? orig.substring(orig.lastIndexOf('.')) : "";
+                imageNames.add(UUID.randomUUID() + ext);
+            }
+            article.setArticleImages(String.join(",", imageNames));
         }
         Article createdArticle = articleService.createArticle(article);
         return ApiResponse.success(createdArticle, ResponseCode.CREATED);

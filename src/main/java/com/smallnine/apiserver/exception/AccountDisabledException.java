@@ -1,7 +1,7 @@
 package com.smallnine.apiserver.exception;
 
 /**
- * 帳號停用異常
+ * 帳號停用例外
  */
 public class AccountDisabledException extends RuntimeException {
 

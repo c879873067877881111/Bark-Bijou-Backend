@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -39,12 +40,13 @@ public class SitterServiceImpl implements SitterService {
         List<Sitter> sitters = sitterDao.searchSitters(search, area, sort, offset, pageSize);
         int total = sitterDao.countSitters(search, area);
 
-        List<SitterResponse> data = sitters.stream().map(s -> {
+        List<SitterResponse> data = new ArrayList<>();
+        for (Sitter s : sitters) {
             SitterResponse resp = SitterResponse.from(s);
             Double avg = sitterReviewDao.getAverageRating(s.getId());
             resp.setRating(avg != null ? avg : 0.0);
-            return resp;
-        }).toList();
+            data.add(resp);
+        }
 
         return new SitterListResponse(total, page, pageSize, data);
     }
@@ -61,7 +63,11 @@ public class SitterServiceImpl implements SitterService {
         resp.setReviewCount(sitterReviewDao.countBySitterId(id));
 
         List<SitterGallery> galleryEntities = sitterGalleryDao.findBySitterId(id);
-        resp.setGallery(galleryEntities.stream().map(SitterGallery::getImageUrl).toList());
+        List<String> galleryUrls = new ArrayList<>();
+        for (SitterGallery g : galleryEntities) {
+            galleryUrls.add(g.getImageUrl());
+        }
+        resp.setGallery(galleryUrls);
 
         resp.setReviews(sitterReviewDao.findBySitterIdWithMember(id));
 

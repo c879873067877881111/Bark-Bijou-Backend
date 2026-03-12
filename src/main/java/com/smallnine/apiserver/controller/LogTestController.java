@@ -23,11 +23,11 @@ public class LogTestController {
     @Operation(summary = "測試不同級別的日誌", description = "產生各種級別的日誌記錄")
     @GetMapping("/levels")
     public ResponseEntity<ApiResponse<String>> testLogLevels() {
-        log.trace("這是TRACE級別日誌 - 最詳細的日誌信息");
-        log.debug("這是DEBUG級別日誌 - 調試信息: {}", System.currentTimeMillis());
-        log.info("這是INFO級別日誌 - 一般信息記錄");
-        log.warn("這是WARN級別日誌 - 警告信息，需要注意");
-        log.error("這是ERROR級別日誌 - 模擬錯誤信息");
+        log.trace("這是TRACE級別日誌 - 最詳細的日誌資訊");
+        log.debug("這是DEBUG級別日誌 - 除錯資訊: {}", System.currentTimeMillis());
+        log.info("這是INFO級別日誌 - 一般資訊記錄");
+        log.warn("這是WARN級別日誌 - 警告資訊，需要注意");
+        log.error("這是ERROR級別日誌 - 模擬錯誤資訊");
         
         return ResponseEntity.ok(ApiResponse.success("已產生各級別日誌，請檢查控制台和日誌文件"));
     }
@@ -40,19 +40,19 @@ public class LogTestController {
         // 模擬業務流程
         log.info("【業務流程】開始執行: {}", operation);
         log.debug("【業務流程】參數驗證通過");
-        log.debug("【業務流程】調用外部服務");
+        log.debug("【業務流程】呼叫外部服務");
         log.info("【業務流程】執行完成: {}", operation);
         
         return ResponseEntity.ok(ApiResponse.success("業務日誌記錄完成"));
     }
     
-    @Operation(summary = "測試性能日誌", description = "模擬慢操作並記錄性能日誌")
+    @Operation(summary = "測試效能日誌", description = "模擬慢操作並記錄效能日誌")
     @GetMapping("/performance")
     public ResponseEntity<ApiResponse<String>> testPerformanceLog(@RequestParam(defaultValue = "1000") int delayMs) {
         long startTime = System.currentTimeMillis();
         
         try {
-            log.info("【性能測試】開始執行慢操作，預計耗時: {}ms", delayMs);
+            log.info("【效能測試】開始執行慢操作，預計耗時: {}ms", delayMs);
             
             // 模擬耗時操作
             TimeUnit.MILLISECONDS.sleep(delayMs);
@@ -64,27 +64,27 @@ public class LogTestController {
             
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("【性能測試】操作被中斷", e);
+            log.error("【效能測試】操作被中斷", e);
             return ResponseEntity.ok(ApiResponse.success("操作被中斷"));
         }
     }
     
-    @Operation(summary = "測試異常日誌", description = "模擬異常情況並記錄異常日誌")
+    @Operation(summary = "測試例外日誌", description = "模擬例外情況並記錄例外日誌")
     @GetMapping("/exception")
     public ResponseEntity<ApiResponse<String>> testExceptionLog(@RequestParam(defaultValue = "false") boolean throwError) {
         try {
-            log.info("【異常測試】開始異常測試，是否拋出異常: {}", throwError);
-            
+            log.info("【例外測試】開始例外測試，是否拋出例外: {}", throwError);
+
             if (throwError) {
-                throw new RuntimeException("這是一個測試異常");
+                throw new RuntimeException("這是一個測試例外");
             }
-            
-            log.info("【異常測試】正常執行完成");
-            return ResponseEntity.ok(ApiResponse.success("正常執行，未發生異常"));
-            
+
+            log.info("【例外測試】正常執行完成");
+            return ResponseEntity.ok(ApiResponse.success("正常執行，未發生例外"));
+
         } catch (Exception e) {
-            LogUtil.logError(log, "異常測試操作", e);
-            return ResponseEntity.ok(ApiResponse.success("異常已捕獲並記錄"));
+            LogUtil.logError(log, "例外測試操作", e);
+            return ResponseEntity.ok(ApiResponse.success("例外已擷取並記錄"));
         }
     }
     

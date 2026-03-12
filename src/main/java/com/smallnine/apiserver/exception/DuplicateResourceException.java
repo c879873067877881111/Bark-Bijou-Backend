@@ -1,7 +1,7 @@
 package com.smallnine.apiserver.exception;
 
 /**
- * 資源重複異常
+ * 資源重複例外
  */
 public class DuplicateResourceException extends RuntimeException {
 

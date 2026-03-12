@@ -52,7 +52,7 @@ public class BusinessLogger {
     }
 
     /**
-     * 記錄性能信息
+     * 記錄效能資訊
      */
     public void logPerformance(String operation, long durationMs) {
         if (durationMs > LogConstants.VERY_SLOW_THRESHOLD) {

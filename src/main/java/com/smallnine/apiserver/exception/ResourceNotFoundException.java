@@ -1,7 +1,7 @@
 package com.smallnine.apiserver.exception;
 
 /**
- * 資源不存在異常
+ * 資源不存在例外
  */
 public class ResourceNotFoundException extends RuntimeException {
 

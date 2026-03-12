@@ -6,6 +6,7 @@ import com.smallnine.apiserver.dto.OrderItemResponse;
 import com.smallnine.apiserver.dto.OrderResponse;
 import com.smallnine.apiserver.entity.Order;
 import com.smallnine.apiserver.entity.OrderItem;
+import java.util.ArrayList;
 import com.smallnine.apiserver.entity.User;
 import com.smallnine.apiserver.service.OrderService;
 import com.smallnine.apiserver.utils.AuthUtils;
@@ -44,8 +45,10 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
-        List<OrderResponse> orders = orderService.findUserOrders(user.getId(), page, size)
-                .stream().map(OrderResponse::fromEntity).toList();
+        List<OrderResponse> orders = new ArrayList<>();
+        for (Order order : orderService.findUserOrders(user.getId(), page, size)) {
+            orders.add(OrderResponse.fromEntity(order));
+        }
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 
@@ -93,8 +96,10 @@ public class OrderController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long orderId) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
-        List<OrderItemResponse> orderItems = orderService.findOrderItems(orderId, user.getId())
-                .stream().map(OrderItemResponse::fromEntity).toList();
+        List<OrderItemResponse> orderItems = new ArrayList<>();
+        for (OrderItem item : orderService.findOrderItems(orderId, user.getId())) {
+            orderItems.add(OrderItemResponse.fromEntity(item));
+        }
         return ResponseEntity.ok(ApiResponse.success(orderItems));
     }
 

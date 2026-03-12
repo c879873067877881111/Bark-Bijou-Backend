@@ -28,7 +28,7 @@ public final class LogContext {
     }
 
     /**
-     * 設置用戶信息（通常在認證後調用）
+     * 設定使用者資訊（通常在認證後呼叫）
      */
     public static void setUser(String userId, String username) {
         if (userId != null) MDC.put(LogConstants.USER_ID, userId);

@@ -10,7 +10,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 /**
  * 日誌攔截器
- * 自動記錄所有API請求和響應信息
+ * 自動記錄所有API請求與回應資訊
  */
 @Slf4j
 @Component
@@ -58,7 +58,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
     
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-        // 可以在這裡記錄處理完成但還沒返回響應的信息
+        // 可以在這裡記錄處理完成但尚未回傳回應的資訊
     }
     
     @Override
@@ -77,20 +77,20 @@ public class LoggingInterceptor implements HandlerInterceptor {
                         response.getStatus(),
                         duration);
 
-                // 記錄異常信息
+                // 記錄例外資訊
                 if (ex != null) {
                     log.error("action=REQUEST_ERROR method={} uri={} error=\"{}\"",
                             request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
                 }
 
-                // 性能監控：慢請求警告
+                // 效能監控：慢請求警告
                 if (duration > 2000) {
                     log.warn("action=SLOW_REQUEST method={} uri={} duration_ms={}",
                             request.getMethod(), request.getRequestURI(), duration);
                 }
             }
         } finally {
-            // 清除 MDC 信息
+            // 清除 MDC 資訊
             LogContext.clear();
         }
     }

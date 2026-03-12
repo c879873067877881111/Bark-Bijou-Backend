@@ -151,7 +151,7 @@ public class AuditLogAspect {
         for (int i = 0; i < parameters.length; i++) {
             String paramName = parameters[i].getName();
             Object paramValue = args[i];
-            // 避免記錄敏感信息
+            // 避免記錄敏感資訊
             if (!isSensitiveParam(paramName)) {
                 params.put(paramName, paramValue != null ? paramValue.toString() : null);
             }

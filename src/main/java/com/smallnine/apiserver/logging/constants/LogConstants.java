@@ -25,7 +25,7 @@ public final class LogConstants {
     public static final String PERFORMANCE_LOGGER = "PERFORMANCE";
     public static final String BUSINESS_LOGGER = "BUSINESS";
 
-    // ===== 性能閾值 (毫秒) =====
+    // ===== 效能閾值（毫秒）=====
     public static final long SLOW_QUERY_THRESHOLD = 1000L;
     public static final long SLOW_API_THRESHOLD = 2000L;
     public static final long VERY_SLOW_THRESHOLD = 5000L;
