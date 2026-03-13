@@ -54,8 +54,10 @@ public class MemberController {
         }
 
         if (avatar != null && !avatar.isEmpty()) {
-            String imageUrl = fileStorageService.store(avatar, "member_images");
-            user.setImageUrl(imageUrl);
+            String storedPath = fileStorageService.store(avatar, "member_images");
+            // 保持舊 URL 格式以維護向後兼容性
+            String filename = storedPath.substring(storedPath.lastIndexOf('/') + 1);
+            user.setImageUrl("/member/member_images/" + filename);
         }
 
         userDao.updateProfile(user);

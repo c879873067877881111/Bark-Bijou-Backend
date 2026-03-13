@@ -43,11 +43,15 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
         String filename = UUID.randomUUID() + ext;
 
-        Path dir = Paths.get(baseDir, subDir);
+        Path base = Paths.get(baseDir).normalize();
+        Path dir = base.resolve(subDir).normalize();
+        if (!dir.startsWith(base)) {
+            throw new IllegalArgumentException("非法子目錄: " + subDir);
+        }
         try {
             Files.createDirectories(dir);
             Path target = dir.resolve(filename);
-            file.transferTo(target.toFile());
+            file.transferTo(target);
             log.debug("檔案已儲存: {}", target.toAbsolutePath());
         } catch (IOException e) {
             throw new RuntimeException("檔案儲存失敗: " + filename, e);

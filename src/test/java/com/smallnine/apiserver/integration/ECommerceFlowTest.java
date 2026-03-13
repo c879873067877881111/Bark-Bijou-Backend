@@ -8,6 +8,8 @@ import com.smallnine.apiserver.dto.CartItemRequest;
 import com.smallnine.apiserver.dto.CreateOrderRequest;
 import com.smallnine.apiserver.entity.Product;
 import com.smallnine.apiserver.entity.User;
+
+import java.math.BigDecimal;
 import com.smallnine.apiserver.utils.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +53,7 @@ public class ECommerceFlowTest extends AbstractIntegrationTest {
     @Test
     public void testCompleteECommerceFlow() throws Exception {
         String userToken = createUserAndGetToken();
-        Long productId = getExistingProductId();
+        Long productId = createTestProduct();
 
         addProductToCart(userToken, productId);
         verifyCart(userToken);
@@ -71,12 +73,23 @@ public class ECommerceFlowTest extends AbstractIntegrationTest {
         return jwtUtil.generateAccessToken(user.getUsername());
     }
 
-    private Long getExistingProductId() {
-        Product product = productDao.findAll(0, 1).stream()
+    private Long createTestProduct() {
+        // 先嘗試用 DB 裡既有的 active 商品
+        return productDao.findAll(0, 1).stream()
                 .filter(Product::getIsActive)
+                .map(Product::getId)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("No active product in DB for integration test"));
-        return product.getId();
+                .orElseGet(() -> {
+                    Product product = new Product();
+                    product.setName("integration_test_product");
+                    product.setDescription("自動建立的測試商品");
+                    product.setPrice(new BigDecimal("99.99"));
+                    product.setSku("TEST-" + System.nanoTime() % 100000);
+                    product.setStockQuantity(100);
+                    product.setIsActive(true);
+                    productDao.insert(product);
+                    return product.getId();
+                });
     }
 
     private void addProductToCart(String token, Long productId) throws Exception {
