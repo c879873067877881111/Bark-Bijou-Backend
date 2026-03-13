@@ -49,4 +49,9 @@ public interface OrderItemDao {
      * 統計訂單項目數量
      */
     long countByOrderId(@Param("orderId") Long orderId);
+
+    /**
+     * 檢查會員是否購買過指定商品
+     */
+    boolean existsByMemberIdAndProductId(@Param("memberId") Long memberId, @Param("productId") Long productId);
 }

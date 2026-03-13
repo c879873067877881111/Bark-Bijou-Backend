@@ -49,6 +49,9 @@ Thumbs.db
 **/*claude*
 **/*Claude*
 
+### Uploads ###
+uploads/
+
 ### Logs ###
 *.log
 logs/

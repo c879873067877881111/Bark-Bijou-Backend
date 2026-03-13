@@ -1,5 +1,6 @@
 package com.smallnine.apiserver.controller;
 
+import com.smallnine.apiserver.dao.OrderItemDao;
 import com.smallnine.apiserver.entity.Review;
 import com.smallnine.apiserver.entity.User;
 import com.smallnine.apiserver.service.ProductReviewService;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class ProductReviewController {
 
     private final ProductReviewService productReviewService;
+    private final OrderItemDao orderItemDao;
 
     @Operation(summary = "檢查是否可評價")
     @GetMapping("/{productId}/check")
@@ -29,13 +31,14 @@ public class ProductReviewController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long productId) {
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("hasPurchased", true); // Default to true for now
+        data.put("hasPurchased", false);
         data.put("hasCommented", false);
         data.put("review", null);
 
         if (userDetails != null) {
             User user = AuthUtils.getAuthenticatedUser(userDetails);
-            // Check if user has already reviewed this product
+            data.put("hasPurchased", orderItemDao.existsByMemberIdAndProductId(user.getId(), productId));
+
             var reviews = productReviewService.getByProductId(productId);
             var existing = reviews.stream()
                     .filter(r -> r.getMemberId().equals(user.getId()))
@@ -66,7 +69,7 @@ public class ProductReviewController {
         review.setMemberId(user.getId());
         review.setRating(rating);
         review.setContent(comment);
-        review.setIsVerifiedPurchase(false);
+        review.setIsVerifiedPurchase(orderItemDao.existsByMemberIdAndProductId(user.getId(), productId));
 
         Review created = productReviewService.add(review);
         return ResponseEntity.ok(Map.of("message", "評價成功", "review", created));

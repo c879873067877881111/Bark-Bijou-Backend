@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vip-levels")
@@ -120,13 +121,9 @@ public class VipLevelController {
 
     @GetMapping("/stats")
     @Operation(summary = "獲取VIP等級統計", description = "獲取VIP等級總數和啟用數量")
-    public ApiResponse<Object> getVipLevelStats() {
+    public ApiResponse<Map<String, Long>> getVipLevelStats() {
         long total = vipLevelService.count();
         long active = vipLevelService.countActive();
-
-        return ApiResponse.success(new Object() {
-            public final long totalVipLevels = total;
-            public final long activeVipLevels = active;
-        });
+        return ApiResponse.success(Map.of("totalVipLevels", total, "activeVipLevels", active));
     }
 }
