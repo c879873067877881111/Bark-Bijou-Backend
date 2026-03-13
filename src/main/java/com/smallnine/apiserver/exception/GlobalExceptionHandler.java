@@ -2,6 +2,8 @@ package com.smallnine.apiserver.exception;
 
 import com.smallnine.apiserver.constants.enums.ResponseCode;
 import com.smallnine.apiserver.dto.ApiResponse;
+import com.smallnine.apiserver.logging.AuditLogger;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -19,7 +21,10 @@ import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final AuditLogger auditLogger;
 
     /**
      * 業務異常處理
@@ -127,6 +132,7 @@ public class GlobalExceptionHandler {
             TokenRefreshException ex, WebRequest request) {
 
         log.warn("Token刷新失敗: {}, 請求: {}", ex.getMessage(), request.getDescription(false));
+        auditLogger.logAccessDenied(request.getDescription(false), "Token 刷新失敗: " + ex.getMessage());
 
         ApiResponse<Void> response = ApiResponse.error(ResponseCode.UNAUTHORIZED.getCode(), ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
@@ -153,6 +159,7 @@ public class GlobalExceptionHandler {
             AccessDeniedException ex, WebRequest request) {
 
         log.warn("授權失敗: {}, 請求: {}", ex.getMessage(), request.getDescription(false));
+        auditLogger.logAccessDenied(request.getDescription(false), ex.getMessage());
 
         ApiResponse<Void> response = ApiResponse.error(ResponseCode.FORBIDDEN);
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);

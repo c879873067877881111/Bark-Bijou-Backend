@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.smallnine.apiserver.logging.AuditLogger;
 import com.smallnine.apiserver.utils.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final AuditLogger auditLogger;
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -43,6 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 username = jwtUtil.extractUsername(jwtToken);
             } catch (Exception e) {
                 log.warn("JWT 解析失敗: uri={}, error={}: {}", request.getRequestURI(), e.getClass().getSimpleName(), e.getMessage());
+                auditLogger.logAccessDenied(request.getRequestURI(), "JWT 解析失敗: " + e.getMessage());
             }
         }
         
@@ -53,6 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtUtil.validateToken(jwtToken, userDetails)) {
                     if (!jwtUtil.isAccessToken(jwtToken)) {
                         log.warn("非 access token 嘗試存取 API: uri={}", request.getRequestURI());
+                        auditLogger.logAccessDenied(request.getRequestURI(), "非 access token 嘗試存取 API");
                         filterChain.doFilter(request, response);
                         return;
                     }
@@ -66,10 +70,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
                     log.warn("JWT 驗證失敗: uri={}, user={}", request.getRequestURI(), username);
+                    auditLogger.logAccessDenied(request.getRequestURI(), "JWT 驗證失敗, user=" + username);
                 }
             } catch (Exception e) {
                 log.warn("JWT 認證過程異常: uri={}, user={}, error={}: {}",
                         request.getRequestURI(), username, e.getClass().getSimpleName(), e.getMessage());
+                auditLogger.logAccessDenied(request.getRequestURI(), "JWT 認證異常: " + e.getMessage());
             }
         }
         
