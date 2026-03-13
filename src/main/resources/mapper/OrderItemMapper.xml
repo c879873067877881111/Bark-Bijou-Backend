@@ -76,4 +76,13 @@
         SELECT COUNT(*) FROM order_items WHERE order_id = #{orderId}
     </select>
 
+    <!-- 檢查會員是否購買過指定商品 -->
+    <select id="existsByMemberIdAndProductId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        WHERE o.member_id = #{memberId}
+          AND oi.product_id = #{productId}
+    </select>
+
 </mapper>

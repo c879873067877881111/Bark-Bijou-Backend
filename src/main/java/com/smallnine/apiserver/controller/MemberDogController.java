@@ -3,6 +3,7 @@ package com.smallnine.apiserver.controller;
 import com.smallnine.apiserver.entity.Dog;
 import com.smallnine.apiserver.entity.User;
 import com.smallnine.apiserver.service.DogService;
+import com.smallnine.apiserver.service.FileStorageService;
 import com.smallnine.apiserver.utils.AuthUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +25,7 @@ import java.util.Map;
 public class MemberDogController {
 
     private final DogService dogService;
+    private final FileStorageService fileStorageService;
 
     @Operation(summary = "取得我的寵物列表")
     @GetMapping
@@ -57,6 +59,17 @@ public class MemberDogController {
             try { dog.setAge(Integer.parseInt(age)); } catch (NumberFormatException ignored) {}
         }
         if (description != null) dog.setDescription(description);
+
+        if (dog_images != null && !dog_images.isEmpty()) {
+            MultipartFile first = dog_images.stream()
+                    .filter(f -> !f.isEmpty())
+                    .findFirst()
+                    .orElse(null);
+            if (first != null) {
+                String imageUrl = fileStorageService.store(first, "dogs");
+                dog.setImageUrl(imageUrl);
+            }
+        }
 
         Dog created = dogService.addDog(dog);
 

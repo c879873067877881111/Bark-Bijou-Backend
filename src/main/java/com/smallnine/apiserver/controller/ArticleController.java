@@ -4,6 +4,7 @@ import com.smallnine.apiserver.constants.enums.ResponseCode;
 import com.smallnine.apiserver.dto.ApiResponse;
 import com.smallnine.apiserver.entity.Article;
 import com.smallnine.apiserver.service.ArticleService;
+import com.smallnine.apiserver.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 public class ArticleController {
 
     private final ArticleService articleService;
+    private final FileStorageService fileStorageService;
 
     @GetMapping("/{id}")
     @Operation(summary = "根據ID查詢文章", description = "通過文章ID獲取詳細訊息")
@@ -117,16 +119,11 @@ public class ArticleController {
             article.setCategoryName(category);
         }
         if (images != null && !images.isEmpty()) {
-            String imageNames = images.stream()
+            String imageUrls = images.stream()
                     .filter(f -> !f.isEmpty())
-                    .map(f -> {
-                        String orig = f.getOriginalFilename();
-                        String ext = (orig != null && orig.contains("."))
-                                ? orig.substring(orig.lastIndexOf('.')) : "";
-                        return UUID.randomUUID() + ext;
-                    })
+                    .map(f -> fileStorageService.store(f, "articles"))
                     .collect(Collectors.joining(","));
-            article.setArticleImages(imageNames);
+            article.setArticleImages(imageUrls);
         }
         Article createdArticle = articleService.createArticle(article);
         return ApiResponse.success(createdArticle, ResponseCode.CREATED);
@@ -167,13 +164,9 @@ public class ArticleController {
 
     @GetMapping("/stats/count")
     @Operation(summary = "獲取文章統計", description = "獲取文章總數和有效文章數")
-    public ApiResponse<Object> getArticleStats() {
+    public ApiResponse<Map<String, Long>> getArticleStats() {
         long total = articleService.count();
         long valid = articleService.countValid();
-
-        return ApiResponse.success(new Object() {
-            public final long totalArticles = total;
-            public final long validArticles = valid;
-        });
+        return ApiResponse.success(Map.of("totalArticles", total, "validArticles", valid));
     }
 }

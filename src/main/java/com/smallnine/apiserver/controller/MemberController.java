@@ -2,6 +2,7 @@ package com.smallnine.apiserver.controller;
 
 import com.smallnine.apiserver.dao.UserDao;
 import com.smallnine.apiserver.entity.User;
+import com.smallnine.apiserver.service.FileStorageService;
 import com.smallnine.apiserver.utils.AuthUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +26,7 @@ public class MemberController {
 
     private final UserDao userDao;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
 
     @Operation(summary = "更新會員資料 (FormData)")
     @PutMapping("/api/member/profile/edit")
@@ -53,13 +54,7 @@ public class MemberController {
         }
 
         if (avatar != null && !avatar.isEmpty()) {
-            String originalFilename = avatar.getOriginalFilename();
-            String ext = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                ext = originalFilename.substring(originalFilename.lastIndexOf('.'));
-            }
-            String safeFilename = UUID.randomUUID() + ext;
-            String imageUrl = "/member/member_images/" + safeFilename;
+            String imageUrl = fileStorageService.store(avatar, "member_images");
             user.setImageUrl(imageUrl);
         }
 
