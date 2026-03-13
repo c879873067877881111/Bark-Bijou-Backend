@@ -83,7 +83,9 @@
         JOIN orders o ON o.id = oi.order_id
         WHERE o.member_id = #{memberId}
           AND oi.product_id = #{productId}
-          AND o.status_id NOT IN (6, 7)
+          AND o.status_id NOT IN (
+              SELECT id FROM order_status WHERE name IN ('cancelled', 'refunded')
+          )
     </select>
 
 </mapper>
