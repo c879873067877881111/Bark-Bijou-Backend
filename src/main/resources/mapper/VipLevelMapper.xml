@@ -23,21 +23,21 @@
     <!-- 根據ID查詢VIP等級 -->
     <select id="findById" resultMap="VipLevelResultMap">
         SELECT <include refid="BaseColumns" />
-        FROM vip_level
+        FROM vip_levels
         WHERE id = #{id}
     </select>
 
     <!-- 根據名稱查詢VIP等級 -->
     <select id="findByName" resultMap="VipLevelResultMap">
         SELECT <include refid="BaseColumns" />
-        FROM vip_level
+        FROM vip_levels
         WHERE name = #{name}
     </select>
 
     <!-- 查詢所有啟用的VIP等級（按排序） -->
     <select id="findAllActive" resultMap="VipLevelResultMap">
         SELECT <include refid="BaseColumns" />
-        FROM vip_level
+        FROM vip_levels
         WHERE is_active = true
         ORDER BY sort_order ASC, min_spending ASC
     </select>
@@ -45,14 +45,14 @@
     <!-- 查詢所有VIP等級 -->
     <select id="findAll" resultMap="VipLevelResultMap">
         SELECT <include refid="BaseColumns" />
-        FROM vip_level
+        FROM vip_levels
         ORDER BY sort_order ASC, min_spending ASC
     </select>
 
     <!-- 根據消費金額查詢匹配的VIP等級 -->
     <select id="findBySpending" resultMap="VipLevelResultMap">
         SELECT <include refid="BaseColumns" />
-        FROM vip_level
+        FROM vip_levels
         WHERE is_active = true AND min_spending &lt;= #{spending}
         ORDER BY min_spending DESC
         LIMIT 1
@@ -60,7 +60,7 @@
 
     <!-- 創建VIP等級 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO vip_level (
+        INSERT INTO vip_levels (
             name, min_spending, discount_rate, points_multiplier,
             free_shipping_threshold, benefits, is_active, sort_order
         ) VALUES (
@@ -72,7 +72,7 @@
 
     <!-- 更新VIP等級 -->
     <update id="update">
-        UPDATE vip_level SET
+        UPDATE vip_levels SET
             name = #{name},
             min_spending = #{minSpending},
             discount_rate = #{discountRate},
@@ -86,22 +86,22 @@
 
     <!-- 刪除VIP等級 -->
     <delete id="deleteById">
-        DELETE FROM vip_level WHERE id = #{id}
+        DELETE FROM vip_levels WHERE id = #{id}
     </delete>
 
     <!-- 檢查名稱是否已存在 -->
     <select id="existsByName" resultType="boolean">
-        SELECT COUNT(*) > 0 FROM vip_level WHERE name = #{name}
+        SELECT COUNT(*) > 0 FROM vip_levels WHERE name = #{name}
     </select>
 
     <!-- 統計VIP等級總數 -->
     <select id="count" resultType="long">
-        SELECT COUNT(*) FROM vip_level
+        SELECT COUNT(*) FROM vip_levels
     </select>
 
     <!-- 統計啟用的VIP等級數量 -->
     <select id="countActive" resultType="long">
-        SELECT COUNT(*) FROM vip_level WHERE is_active = true
+        SELECT COUNT(*) FROM vip_levels WHERE is_active = true
     </select>
 
 </mapper>

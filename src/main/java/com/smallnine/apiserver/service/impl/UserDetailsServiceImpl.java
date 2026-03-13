@@ -1,4 +1,4 @@
-package com.smallnine.apiserver.service;
+package com.smallnine.apiserver.service.impl;
 
 import com.smallnine.apiserver.dao.UserDao;
 import com.smallnine.apiserver.entity.User;
