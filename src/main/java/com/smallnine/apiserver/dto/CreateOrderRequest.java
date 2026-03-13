@@ -37,7 +37,6 @@ public class CreateOrderRequest {
     @Size(max = 500, message = "門市地址長度不能超過500字符")
     private String storeAddress;
 
-    @Deprecated
     @Size(max = 500, message = "配送地址長度不能超過500字符")
     private String shippingAddress;
 
