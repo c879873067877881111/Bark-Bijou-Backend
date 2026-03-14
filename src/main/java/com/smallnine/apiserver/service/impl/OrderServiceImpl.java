@@ -5,6 +5,7 @@ import com.smallnine.apiserver.constants.enums.ResponseCode;
 import com.smallnine.apiserver.dao.OrderDao;
 import com.smallnine.apiserver.dao.OrderItemDao;
 import com.smallnine.apiserver.dao.ProductDao;
+import com.smallnine.apiserver.dto.CreateOrderRequest;
 import com.smallnine.apiserver.entity.CartItem;
 import com.smallnine.apiserver.entity.Order;
 import com.smallnine.apiserver.entity.OrderItem;
@@ -98,9 +99,9 @@ public class OrderServiceImpl implements OrderService {
      * 從購物車創建訂單
      */
     @Transactional
-    public Order createOrderFromCart(Long memberId, String shippingAddress, String notes) {
+    public Order createOrderFromCart(Long memberId, CreateOrderRequest request) {
         log.info("從購物車創建訂單: memberId={}", memberId);
-        
+
         // 1. 獲取購物車項目
         List<CartItem> cartItems = cartService.getCartItems(memberId);
         if (cartItems.isEmpty()) {
@@ -133,10 +134,18 @@ public class OrderServiceImpl implements OrderService {
         order.setShippingAmount(BigDecimal.ZERO);
         order.setTaxAmount(BigDecimal.ZERO);
         order.setDiscountAmount(BigDecimal.ZERO);
-        order.setShippingAddress(shippingAddress);
-        order.setNotes(notes);
-        order.setCreatedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
+        order.setShippingAddress(request.getShippingAddress());
+        order.setRecipientName(request.getRecipientName());
+        order.setRecipientPhone(request.getRecipientPhone());
+        order.setRecipientEmail(request.getRecipientEmail());
+        order.setDeliveryMethod(request.getDeliveryMethod());
+        order.setCity(request.getCity());
+        order.setTown(request.getTown());
+        order.setAddress(request.getAddress());
+        order.setStoreName(request.getStoreName());
+        order.setStoreAddress(request.getStoreAddress());
+        order.setCouponId(request.getCouponId());
+        order.setNotes(request.getNotes());
 
         orderDao.insert(order);
         log.info("訂單創建成功: orderId={}, orderNumber={}", order.getId(), order.getOrderNumber());
@@ -168,9 +177,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public Order createOrderFromCart(Long memberId, String shippingAddress, String notes, String idempotencyKey) {
+    public Order createOrderFromCart(Long memberId, CreateOrderRequest request, String idempotencyKey) {
         if (idempotencyKey == null) {
-            return createOrderFromCart(memberId, shippingAddress, notes);
+            return createOrderFromCart(memberId, request);
         }
 
         String redisKey = "order:idempotency:" + memberId + ":" + idempotencyKey;
@@ -190,7 +199,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         try {
-            Order order = createOrderFromCart(memberId, shippingAddress, notes);
+            Order order = createOrderFromCart(memberId, request);
             // 建單成功，將 PENDING 替換成實際訂單 ID
             redisTemplate.opsForValue().set(redisKey, order.getId().toString(), 24, TimeUnit.HOURS);
             return order;

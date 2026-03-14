@@ -6,6 +6,7 @@ import com.smallnine.apiserver.dao.CartItemDao;
 import com.smallnine.apiserver.dao.OrderDao;
 import com.smallnine.apiserver.dao.OrderItemDao;
 import com.smallnine.apiserver.dao.ProductDao;
+import com.smallnine.apiserver.dto.CreateOrderRequest;
 import com.smallnine.apiserver.entity.Order;
 import com.smallnine.apiserver.exception.BusinessException;
 import org.junit.jupiter.api.AfterEach;
@@ -43,6 +44,15 @@ class OrderServiceTest {
     private static final Long PRODUCT_ID = 1L;
 
     private Long pendingOrderId;
+
+    private CreateOrderRequest buildRequest(String addr) {
+        CreateOrderRequest req = new CreateOrderRequest();
+        req.setRecipientName("測試用戶");
+        req.setRecipientPhone("0912345678");
+        req.setDeliveryMethod("HOME_DELIVERY");
+        req.setShippingAddress(addr);
+        return req;
+    }
 
     @BeforeEach
     void setUp() {
@@ -114,7 +124,7 @@ class OrderServiceTest {
     @Test
     void cancelOrder_pending() {
         // 先建一筆有 order_items 的真實訂單（透過購物車結帳）
-        Order created = orderService.createOrderFromCart(MEMBER_ID, "addr", null, null);
+        Order created = orderService.createOrderFromCart(MEMBER_ID, buildRequest("addr"), null);
 
         int stockBeforeCancel = productDao.findById(PRODUCT_ID).orElseThrow().getStockQuantity();
 
@@ -149,7 +159,9 @@ class OrderServiceTest {
     void createOrderFromCart_success() {
         int stockBefore = productDao.findById(PRODUCT_ID).orElseThrow().getStockQuantity();
 
-        Order order = orderService.createOrderFromCart(MEMBER_ID, "shipping addr", "notes", null);
+        CreateOrderRequest req = buildRequest("shipping addr");
+        req.setNotes("notes");
+        Order order = orderService.createOrderFromCart(MEMBER_ID, req, null);
 
         assertNotNull(order.getId());
         assertNotNull(order.getOrderNumber());
@@ -169,7 +181,7 @@ class OrderServiceTest {
         cartService.clearCart(MEMBER_ID);
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
-                orderService.createOrderFromCart(MEMBER_ID, "addr", null, null));
+                orderService.createOrderFromCart(MEMBER_ID, buildRequest("addr"), null));
         assertEquals(ResponseCode.CART_EMPTY.getCode(), ex.getCode());
     }
 
@@ -179,7 +191,7 @@ class OrderServiceTest {
     void createOrderFromCart_idempotent_firstCall() {
         String idempotencyKey = UUID.randomUUID().toString();
 
-        Order order = orderService.createOrderFromCart(MEMBER_ID, "addr", null, idempotencyKey);
+        Order order = orderService.createOrderFromCart(MEMBER_ID, buildRequest("addr"), idempotencyKey);
 
         assertNotNull(order.getId());
 
@@ -192,12 +204,12 @@ class OrderServiceTest {
     void createOrderFromCart_idempotent_duplicate() {
         String idempotencyKey = UUID.randomUUID().toString();
 
-        Order first = orderService.createOrderFromCart(MEMBER_ID, "addr", null, idempotencyKey);
+        Order first = orderService.createOrderFromCart(MEMBER_ID, buildRequest("addr"), idempotencyKey);
 
         // 再加一些東西到購物車（模擬第二次請求）
         cartService.addToCart(MEMBER_ID, PRODUCT_ID, 1);
 
-        Order second = orderService.createOrderFromCart(MEMBER_ID, "addr", null, idempotencyKey);
+        Order second = orderService.createOrderFromCart(MEMBER_ID, buildRequest("addr"), idempotencyKey);
 
         assertEquals(first.getId(), second.getId());
     }

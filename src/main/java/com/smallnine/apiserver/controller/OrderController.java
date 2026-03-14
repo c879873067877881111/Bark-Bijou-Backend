@@ -109,11 +109,7 @@ public class OrderController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreateOrderRequest request) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
-        Order order = orderService.createOrderFromCart(
-                user.getId(),
-                request.getShippingAddress(),
-                request.getNotes()
-        );
+        Order order = orderService.createOrderFromCart(user.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("訂單創建成功", OrderResponse.fromEntity(order)));
     }

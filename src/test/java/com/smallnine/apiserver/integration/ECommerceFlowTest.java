@@ -117,6 +117,9 @@ public class ECommerceFlowTest extends AbstractIntegrationTest {
 
     private void createOrder(String token) throws Exception {
         CreateOrderRequest orderRequest = new CreateOrderRequest();
+        orderRequest.setRecipientName("測試用戶");
+        orderRequest.setRecipientPhone("0912345678");
+        orderRequest.setDeliveryMethod("HOME_DELIVERY");
         orderRequest.setShippingAddress("測試地址");
 
         MvcResult result = mockMvc.perform(post("/api/orders")

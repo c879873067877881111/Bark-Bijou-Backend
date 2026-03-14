@@ -8,21 +8,39 @@
         <result property="memberId" column="member_id" />
         <result property="orderNumber" column="order_number" />
         <result property="statusId" column="status_id" />
+        <result property="paymentId" column="payment_id" />
         <result property="totalAmount" column="total_amount" />
         <result property="shippingAmount" column="shipping_amount" />
         <result property="taxAmount" column="tax_amount" />
         <result property="discountAmount" column="discount_amount" />
         <result property="shippingAddress" column="shipping_address" />
         <result property="billingAddress" column="billing_address" />
+        <result property="recipientName" column="recipient_name" />
+        <result property="recipientPhone" column="recipient_phone" />
+        <result property="recipientEmail" column="recipient_email" />
+        <result property="deliveryMethod" column="delivery_method" />
+        <result property="city" column="city" />
+        <result property="town" column="town" />
+        <result property="address" column="address" />
+        <result property="storeName" column="store_name" />
+        <result property="storeAddress" column="store_address" />
+        <result property="couponId" column="coupon_id" />
+        <result property="discountType" column="discount_type" />
+        <result property="discountValue" column="discount_value" />
         <result property="notes" column="notes" />
         <result property="createdAt" column="created_at" />
         <result property="updatedAt" column="updated_at" />
+        <result property="deletedAt" column="deleted_at" />
     </resultMap>
 
     <sql id="BaseColumns">
-        id, member_id, order_number, status_id, total_amount, shipping_amount,
-        tax_amount, discount_amount, shipping_address, billing_address, 
-        notes, created_at, updated_at
+        id, member_id, order_number, status_id, payment_id,
+        total_amount, shipping_amount, tax_amount, discount_amount,
+        shipping_address, billing_address,
+        recipient_name, recipient_phone, recipient_email,
+        delivery_method, city, town, address, store_name, store_address,
+        coupon_id, discount_type, discount_value,
+        notes, created_at, updated_at, deleted_at
     </sql>
 
     <!-- 根據ID查詢訂單 -->
@@ -60,12 +78,20 @@
     <!-- 創建訂單 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO orders (
-            member_id, order_number, status_id, total_amount, shipping_amount,
-            tax_amount, discount_amount, shipping_address, billing_address, 
+            member_id, order_number, status_id, payment_id,
+            total_amount, shipping_amount, tax_amount, discount_amount,
+            shipping_address, billing_address,
+            recipient_name, recipient_phone, recipient_email,
+            delivery_method, city, town, address, store_name, store_address,
+            coupon_id, discount_type, discount_value,
             notes, created_at, updated_at
         ) VALUES (
-            #{memberId}, #{orderNumber}, #{statusId}, #{totalAmount}, #{shippingAmount},
-            #{taxAmount}, #{discountAmount}, #{shippingAddress}, #{billingAddress},
+            #{memberId}, #{orderNumber}, #{statusId}, #{paymentId},
+            #{totalAmount}, #{shippingAmount}, #{taxAmount}, #{discountAmount},
+            #{shippingAddress}, #{billingAddress},
+            #{recipientName}, #{recipientPhone}, #{recipientEmail},
+            #{deliveryMethod}, #{city}, #{town}, #{address}, #{storeName}, #{storeAddress},
+            #{couponId}, #{discountType}, #{discountValue},
             #{notes}, NOW(), NOW()
         )
     </insert>
@@ -74,12 +100,25 @@
     <update id="update">
         UPDATE orders SET
             status_id = #{statusId},
+            payment_id = #{paymentId},
             total_amount = #{totalAmount},
             shipping_amount = #{shippingAmount},
             tax_amount = #{taxAmount},
             discount_amount = #{discountAmount},
             shipping_address = #{shippingAddress},
             billing_address = #{billingAddress},
+            recipient_name = #{recipientName},
+            recipient_phone = #{recipientPhone},
+            recipient_email = #{recipientEmail},
+            delivery_method = #{deliveryMethod},
+            city = #{city},
+            town = #{town},
+            address = #{address},
+            store_name = #{storeName},
+            store_address = #{storeAddress},
+            coupon_id = #{couponId},
+            discount_type = #{discountType},
+            discount_value = #{discountValue},
             notes = #{notes},
             updated_at = NOW()
         WHERE id = #{id}

@@ -1,5 +1,6 @@
 package com.smallnine.apiserver.service;
 
+import com.smallnine.apiserver.dto.CreateOrderRequest;
 import com.smallnine.apiserver.entity.Order;
 import com.smallnine.apiserver.entity.OrderItem;
 
@@ -15,9 +16,9 @@ public interface OrderService {
 
     List<OrderItem> findOrderItems(Long orderId, Long memberId);
 
-    Order createOrderFromCart(Long memberId, String shippingAddress, String notes);
+    Order createOrderFromCart(Long memberId, CreateOrderRequest request);
 
-    Order createOrderFromCart(Long memberId, String shippingAddress, String notes, String idempotencyKey);
+    Order createOrderFromCart(Long memberId, CreateOrderRequest request, String idempotencyKey);
 
     void updateOrderStatus(Long orderId, Long statusId);
 
