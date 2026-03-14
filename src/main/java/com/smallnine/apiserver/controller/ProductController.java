@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -36,8 +37,11 @@ public class ProductController {
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        List<ProductResponse> products = productService.findAll(page, size)
-                .stream().map(ProductResponse::new).toList();
+        List<Product> productEntities = productService.findAll(page, size);
+        List<ProductResponse> products = new ArrayList<>();
+        for (Product p : productEntities) {
+            products.add(new ProductResponse(p));
+        }
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 
@@ -65,8 +69,11 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        List<ProductResponse> products = productService.searchProducts(keyword, minPrice, maxPrice, page, size)
-                .stream().map(ProductResponse::new).toList();
+        List<Product> searchEntities = productService.searchProducts(keyword, minPrice, maxPrice, page, size);
+        List<ProductResponse> products = new ArrayList<>();
+        for (Product p : searchEntities) {
+            products.add(new ProductResponse(p));
+        }
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 
@@ -80,8 +87,11 @@ public class ProductController {
             @PathVariable Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        List<ProductResponse> products = productService.findByCategory(categoryId, page, size)
-                .stream().map(ProductResponse::new).toList();
+        List<Product> categoryEntities = productService.findByCategory(categoryId, page, size);
+        List<ProductResponse> products = new ArrayList<>();
+        for (Product p : categoryEntities) {
+            products.add(new ProductResponse(p));
+        }
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 

@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,26 +41,26 @@ public class BrandServiceImpl implements BrandService {
     @Cacheable(value = "brands", key = "'all:' + #page + ':' + #size")
     public List<BrandResponse> findAllBrands(int page, int size) {
         List<Brand> brands = findAll(page, size);
-        return brands.stream()
-                .map(brand -> {
-                    BrandResponse response = BrandResponse.fromEntity(brand);
-                    response.setProductCount(brandDao.countProductsByBrandId(brand.getId()));
-                    return response;
-                })
-                .collect(Collectors.toList());
+        List<BrandResponse> responses = new ArrayList<>();
+        for (Brand brand : brands) {
+            BrandResponse response = BrandResponse.fromEntity(brand);
+            response.setProductCount(brandDao.countProductsByBrandId(brand.getId()));
+            responses.add(response);
+        }
+        return responses;
     }
 
     public List<BrandResponse> searchByName(String name, int page, int size) {
         int offset = page * size;
         String safeName = SqlSecurityUtil.escapeLikePattern(name);
         List<Brand> brands = brandDao.searchByName(safeName, offset, size);
-        return brands.stream()
-                .map(brand -> {
-                    BrandResponse response = BrandResponse.fromEntity(brand);
-                    response.setProductCount(brandDao.countProductsByBrandId(brand.getId()));
-                    return response;
-                })
-                .collect(Collectors.toList());
+        List<BrandResponse> responses = new ArrayList<>();
+        for (Brand brand : brands) {
+            BrandResponse response = BrandResponse.fromEntity(brand);
+            response.setProductCount(brandDao.countProductsByBrandId(brand.getId()));
+            responses.add(response);
+        }
+        return responses;
     }
 
     @CacheEvict(value = "brands", allEntries = true)

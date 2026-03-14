@@ -40,10 +40,13 @@ public class ProductReviewController {
             data.put("hasPurchased", orderItemDao.existsByMemberIdAndProductId(user.getId(), productId));
 
             var reviews = productReviewService.getByProductId(productId);
-            var existing = reviews.stream()
-                    .filter(r -> r.getMemberId().equals(user.getId()))
-                    .findFirst()
-                    .orElse(null);
+            Review existing = null;
+            for (Review r : reviews) {
+                if (r.getMemberId().equals(user.getId())) {
+                    existing = r;
+                    break;
+                }
+            }
             if (existing != null) {
                 data.put("hasCommented", true);
                 data.put("review", existing);

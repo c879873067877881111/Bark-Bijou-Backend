@@ -2,9 +2,8 @@ package com.smallnine.apiserver.constants.enums;
 
 import org.springframework.http.HttpStatus;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public enum ResponseCode {
     SUCCESS(200, "成功", HttpStatus.OK),
@@ -112,8 +111,14 @@ public enum ResponseCode {
     }
 
     // 預建index，時間複雜度 O(1) 查詢
-    private static final Map<Integer, ResponseCode> CODE_MAP = Stream.of(values())
-            .collect(Collectors.toUnmodifiableMap(ResponseCode::getCode, e -> e));
+    private static final Map<Integer, ResponseCode> CODE_MAP;
+    static {
+        Map<Integer, ResponseCode> map = new HashMap<>();
+        for (ResponseCode rc : values()) {
+            map.put(rc.getCode(), rc);
+        }
+        CODE_MAP = Map.copyOf(map);
+    }
 
     /**
      * 根據業務碼查找對應的 ResponseCode

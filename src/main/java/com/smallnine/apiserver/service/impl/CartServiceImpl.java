@@ -168,9 +168,11 @@ public class CartServiceImpl implements CartService {
     public BigDecimal calculateCartTotal(Long memberId) {
         List<CartItem> cartItems = cartItemDao.findByMemberId(memberId);
         
-        return cartItems.stream()
-                .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = BigDecimal.ZERO;
+        for (CartItem item : cartItems) {
+            total = total.add(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+        }
+        return total;
     }
     
     /**

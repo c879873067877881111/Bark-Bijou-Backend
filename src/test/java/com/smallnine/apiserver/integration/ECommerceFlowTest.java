@@ -10,6 +10,7 @@ import com.smallnine.apiserver.entity.Product;
 import com.smallnine.apiserver.entity.User;
 
 import java.math.BigDecimal;
+import java.util.List;
 import com.smallnine.apiserver.utils.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,21 +76,22 @@ public class ECommerceFlowTest extends AbstractIntegrationTest {
 
     private Long createTestProduct() {
         // 先嘗試用 DB 裡既有的 active 商品
-        return productDao.findAll(0, 1).stream()
-                .filter(Product::getIsActive)
-                .map(Product::getId)
-                .findFirst()
-                .orElseGet(() -> {
-                    Product product = new Product();
-                    product.setName("integration_test_product");
-                    product.setDescription("自動建立的測試商品");
-                    product.setPrice(new BigDecimal("99.99"));
-                    product.setSku("TEST-" + System.nanoTime() % 100000);
-                    product.setStockQuantity(100);
-                    product.setIsActive(true);
-                    productDao.insert(product);
-                    return product.getId();
-                });
+        List<Product> candidates = productDao.findAll(0, 1);
+        for (Product p : candidates) {
+            if (p.getIsActive()) {
+                return p.getId();
+            }
+        }
+
+        Product product = new Product();
+        product.setName("integration_test_product");
+        product.setDescription("自動建立的測試商品");
+        product.setPrice(new BigDecimal("99.99"));
+        product.setSku("TEST-" + System.nanoTime() % 100000);
+        product.setStockQuantity(100);
+        product.setIsActive(true);
+        productDao.insert(product);
+        return product.getId();
     }
 
     private void addProductToCart(String token, Long productId) throws Exception {

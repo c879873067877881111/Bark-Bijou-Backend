@@ -20,9 +20,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -119,10 +119,13 @@ public class ArticleController {
             article.setCategoryName(category);
         }
         if (images != null && !images.isEmpty()) {
-            String imageUrls = images.stream()
-                    .filter(f -> !f.isEmpty())
-                    .map(f -> fileStorageService.store(f, "articles"))
-                    .collect(Collectors.joining(","));
+            List<String> urls = new ArrayList<>();
+            for (MultipartFile f : images) {
+                if (!f.isEmpty()) {
+                    urls.add(fileStorageService.store(f, "articles"));
+                }
+            }
+            String imageUrls = String.join(",", urls);
             article.setArticleImages(imageUrls);
         }
         Article createdArticle = articleService.createArticle(article);

@@ -22,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -44,8 +45,11 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
-        List<OrderResponse> orders = orderService.findUserOrders(user.getId(), page, size)
-                .stream().map(OrderResponse::fromEntity).toList();
+        List<Order> orderEntities = orderService.findUserOrders(user.getId(), page, size);
+        List<OrderResponse> orders = new ArrayList<>();
+        for (Order o : orderEntities) {
+            orders.add(OrderResponse.fromEntity(o));
+        }
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 
@@ -93,8 +97,11 @@ public class OrderController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long orderId) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
-        List<OrderItemResponse> orderItems = orderService.findOrderItems(orderId, user.getId())
-                .stream().map(OrderItemResponse::fromEntity).toList();
+        List<OrderItem> itemEntities = orderService.findOrderItems(orderId, user.getId());
+        List<OrderItemResponse> orderItems = new ArrayList<>();
+        for (OrderItem item : itemEntities) {
+            orderItems.add(OrderItemResponse.fromEntity(item));
+        }
         return ResponseEntity.ok(ApiResponse.success(orderItems));
     }
 

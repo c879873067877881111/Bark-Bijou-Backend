@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,33 +46,35 @@ public class CategoryServiceImpl implements CategoryService {
     @Cacheable(value = "categories", key = "'top'")
     public List<CategoryResponse> findTopCategories() {
         List<Category> topCategories = categoryDao.findTopCategories();
-        return topCategories.stream()
-                .map(category -> {
-                    CategoryResponse response = CategoryResponse.fromEntity(category);
-                    response.setProductCount(productDao.countByCategoryId(category.getId()));
-                    return response;
-                })
-                .collect(Collectors.toList());
+        List<CategoryResponse> responses = new ArrayList<>();
+        for (Category category : topCategories) {
+            CategoryResponse response = CategoryResponse.fromEntity(category);
+            response.setProductCount(productDao.countByCategoryId(category.getId()));
+            responses.add(response);
+        }
+        return responses;
     }
 
     @Cacheable(value = "categories", key = "'tree'")
     public List<CategoryResponse> getCategoryTree() {
         List<Category> topCategories = categoryDao.findTopCategories();
-        return topCategories.stream()
-                .map(this::buildCategoryTree)
-                .collect(Collectors.toList());
+        List<CategoryResponse> responses = new ArrayList<>();
+        for (Category category : topCategories) {
+            responses.add(buildCategoryTree(category));
+        }
+        return responses;
     }
 
     @Cacheable(value = "categories", key = "'parent:' + #parentId")
     public List<CategoryResponse> findByParentId(Long parentId) {
         List<Category> categories = categoryDao.findByParentId(parentId);
-        return categories.stream()
-                .map(category -> {
-                    CategoryResponse response = CategoryResponse.fromEntity(category);
-                    response.setProductCount(productDao.countByCategoryId(category.getId()));
-                    return response;
-                })
-                .collect(Collectors.toList());
+        List<CategoryResponse> responses = new ArrayList<>();
+        for (Category category : categories) {
+            CategoryResponse response = CategoryResponse.fromEntity(category);
+            response.setProductCount(productDao.countByCategoryId(category.getId()));
+            responses.add(response);
+        }
+        return responses;
     }
 
     @CacheEvict(value = "categories", allEntries = true)
@@ -185,9 +187,10 @@ public class CategoryServiceImpl implements CategoryService {
 
         List<Category> children = categoryDao.findByParentId(category.getId());
         if (!children.isEmpty()) {
-            List<CategoryResponse> childResponses = children.stream()
-                    .map(this::buildCategoryTree)
-                    .collect(Collectors.toList());
+            List<CategoryResponse> childResponses = new ArrayList<>();
+            for (Category child : children) {
+                childResponses.add(buildCategoryTree(child));
+            }
             response.setChildren(childResponses);
         }
 
