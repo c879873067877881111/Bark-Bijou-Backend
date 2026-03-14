@@ -316,11 +316,13 @@ scrape_configs:
 ### ELK Stack 日誌收集
 
 ELK 服務已整合在 `docker-compose.yml`（Elasticsearch、Kibana、Filebeat）。
-Filebeat 設定檔位於專案根目錄 `filebeat.yml`。
+
+- `elk/setup-es.sh`：ES 啟動後自動建 index template（`es-setup` init container 執行）
+- `filebeat.yml`：Filebeat 設定檔，位於專案根目錄
 
 **啟動 ELK：**
 ```bash
-docker compose up -d elasticsearch kibana filebeat
+docker compose up -d elasticsearch es-setup kibana filebeat
 ```
 
 **Filebeat 設定（`filebeat.yml`）：**
@@ -345,8 +347,7 @@ output.elasticsearch:
   index: "api-server-%{+yyyy.MM.dd}"
 
 setup.ilm.enabled: false
-setup.template.name: "api-server"
-setup.template.pattern: "api-server-*"
+setup.template.enabled: false
 ```
 
 **驗證：**

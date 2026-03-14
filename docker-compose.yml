@@ -56,6 +56,16 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  es-setup:
+    image: curlimages/curl:8.5.0
+    container_name: es-setup
+    volumes:
+      - ./elk/setup-es.sh:/setup-es.sh:ro
+    entrypoint: ["sh", "/setup-es.sh"]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
   filebeat:
     image: elastic/filebeat:8.15.0
     container_name: filebeat
@@ -64,8 +74,8 @@ services:
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - ./logs/json/:/var/log/app/json/:ro
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      es-setup:
+        condition: service_completed_successfully
     restart: unless-stopped
 
 volumes:
