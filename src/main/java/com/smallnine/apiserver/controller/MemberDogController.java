@@ -61,10 +61,13 @@ public class MemberDogController {
         if (description != null) dog.setDescription(description);
 
         if (dog_images != null && !dog_images.isEmpty()) {
-            MultipartFile first = dog_images.stream()
-                    .filter(f -> !f.isEmpty())
-                    .findFirst()
-                    .orElse(null);
+            MultipartFile first = null;
+            for (MultipartFile f : dog_images) {
+                if (!f.isEmpty()) {
+                    first = f;
+                    break;
+                }
+            }
             if (first != null) {
                 String imageUrl = fileStorageService.store(first, "dogs");
                 dog.setImageUrl(imageUrl);
