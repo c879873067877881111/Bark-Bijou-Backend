@@ -78,6 +78,12 @@ public class AuditEvent {
      */
     public Map<String, Object> toJsonMap() {
         Map<String, Object> map = new HashMap<>();
+
+        // details 先放，讓保留欄位覆蓋 details 中的同名 key
+        if (details != null && !details.isEmpty()) {
+            map.putAll(details);
+        }
+
         map.put("audit_event", true);
         map.put("action", action.name());
         map.put("result", result.name());
@@ -89,11 +95,7 @@ public class AuditEvent {
         if (resourceId != null) map.put("resource_id", resourceId);
         if (description != null) map.put("desc", description);
         if (duration != null) map.put("duration_ms", duration);
-        if (traceId != null) map.put("trace_id", traceId);
-
-        if (details != null && !details.isEmpty()) {
-            map.putAll(details);
-        }
+        // traceId 由 MDC 自動提供，不需重複設定
 
         return map;
     }

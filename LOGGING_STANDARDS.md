@@ -23,14 +23,13 @@ LogstashEncoder 輸出範例：
   "user_id": "123",
   "username": "john",
   "client_ip": "192.168.1.1",
-  "trace_id": "abc-def-123",
   "traceId": "abc-def-123",
   "userId": "123"
 }
 ```
 
 審計欄位透過 `StructuredArguments.entries()` 提升為 top-level fields，可直接在 Elasticsearch 查詢。
-MDC 欄位（traceId, userId 等）由 LogstashEncoder 自動包含。
+MDC 欄位（traceId, userId 等）由 LogstashEncoder 自動包含，不需在 `toJsonMap()` 重複設定。
 
 ## 字段定義
 
