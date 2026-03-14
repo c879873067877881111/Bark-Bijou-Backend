@@ -316,9 +316,7 @@ scrape_configs:
 ### ELK Stack 日誌收集
 
 ELK 服務已整合在 `docker-compose.yml`（Elasticsearch、Kibana、Filebeat）。
-
-- `elk/setup-es.sh`：ES 啟動後自動建 index template（`es-setup` init container 執行）
-- `filebeat.yml`：Filebeat 設定檔，位於專案根目錄
+Filebeat 使用原生 data stream，無需額外 shell script 或 init container。
 
 **啟動 ELK：**
 ```bash
@@ -344,14 +342,10 @@ filebeat.inputs:
 
 output.elasticsearch:
   hosts: ["elasticsearch:9200"]
-  index: "api-server-%{+yyyy.MM.dd}"
-
-setup.ilm.enabled: false
-setup.template.enabled: false
 ```
 
 **驗證：**
-- Kibana 儀表板：`http://localhost:5601`
+- Kibana 儀表板：`http://localhost:5601`，Data View 使用 `filebeat-*`
 - Elasticsearch：`http://localhost:9200/_cat/indices?v`
 - 日誌使用 LogstashEncoder 輸出結構化 JSON，審計欄位為 top-level fields，可直接查詢
 
