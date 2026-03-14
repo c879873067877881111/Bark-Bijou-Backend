@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 # Wait for Elasticsearch to be ready, then create index template.
 # This runs as a one-shot init container before filebeat starts.
 

@@ -1,6 +1,3 @@
-logging.level: info
-logging.to_stderr: true
-
 filebeat.inputs:
   - type: filestream
     id: api-server-json
