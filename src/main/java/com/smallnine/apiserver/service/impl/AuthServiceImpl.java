@@ -151,6 +151,7 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String refreshToken) {
         if (refreshToken != null) {
             refreshTokenService.revokeByToken(refreshToken);
+            auditLogger.logLogout(LogContext.getUserId(), LogContext.getUsername());
             log.info("action=logout result=success token_revoked=true");
         } else {
             log.warn("action=logout result=failed reason=missing_token");
