@@ -51,10 +51,15 @@ public class VipLevelServiceImpl implements VipLevelService {
         }
 
         // Use cached findAllActive() and compute in app — avoids BigDecimal cache key issues
-        return findAllActive().stream()
-                .filter(v -> spending.compareTo(v.getMinSpending()) >= 0)
-                .reduce((a, b) -> b.getMinSpending().compareTo(a.getMinSpending()) > 0 ? b : a)
-                .orElse(null);
+        VipLevel best = null;
+        for (VipLevel v : findAllActive()) {
+            if (spending.compareTo(v.getMinSpending()) >= 0) {
+                if (best == null || v.getMinSpending().compareTo(best.getMinSpending()) > 0) {
+                    best = v;
+                }
+            }
+        }
+        return best;
     }
     
     @CacheEvict(value = "vipLevels", allEntries = true)
