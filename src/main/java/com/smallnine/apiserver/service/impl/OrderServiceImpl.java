@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.CartService;
 import com.smallnine.apiserver.service.OrderService;
 import com.smallnine.apiserver.service.ProductService;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartService cartService;
     private final ProductService productService;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectProvider<OrderService> selfProvider;
     
     /**
      * 根據ID查詢訂單（內部使用，無授權檢查）
@@ -100,6 +102,51 @@ public class OrderServiceImpl implements OrderService {
      */
     @Transactional
     public Order createOrderFromCart(Long memberId, CreateOrderRequest request) {
+        return doCreateOrderFromCart(memberId, request);
+    }
+
+    @Override
+    public Order createOrderFromCart(Long memberId, CreateOrderRequest request, String idempotencyKey) {
+        if (idempotencyKey == null) {
+            return selfProvider.getObject().createOrderFromCart(memberId, request);
+        }
+
+        String redisKey = "order:idempotency:" + memberId + ":" + idempotencyKey;
+
+        // SETNX 原子佔位，防止並行請求同時通過
+        Boolean acquired = redisTemplate.opsForValue()
+                .setIfAbsent(redisKey, "PENDING", 24, TimeUnit.HOURS);
+
+        if (Boolean.FALSE.equals(acquired)) {
+            // 鍵已存在，查回已建立的訂單
+            Object existingOrderId = redisTemplate.opsForValue().get(redisKey);
+            if (existingOrderId != null && !"PENDING".equals(existingOrderId.toString())) {
+                return orderDao.findById(Long.parseLong(existingOrderId.toString()))
+                        .orElseThrow(() -> new BusinessException(ResponseCode.ORDER_NOT_FOUND));
+            }
+            throw new BusinessException(ResponseCode.CONFLICT, "訂單正在建立中，請稍後重試");
+        }
+
+        Order order;
+        try {
+            // 透過 self-proxy 呼叫，讓 @Transactional 切面真正啟動獨立交易
+            // DB commit 完成後才會回到這裡，避免 Redis 寫了 orderId 但 DB rollback
+            order = selfProvider.getObject().createOrderFromCart(memberId, request);
+        } catch (Exception e) {
+            // Redis 清除若失敗，記 warn 但保留原始業務例外（不被 cleanup 例外蓋掉）
+            try {
+                redisTemplate.delete(redisKey);
+            } catch (Exception cleanup) {
+                log.warn("idempotency=cleanup_failed key={} reason={}", redisKey, cleanup.getMessage());
+            }
+            throw e;
+        }
+
+        redisTemplate.opsForValue().set(redisKey, order.getId().toString(), 24, TimeUnit.HOURS);
+        return order;
+    }
+
+    private Order doCreateOrderFromCart(Long memberId, CreateOrderRequest request) {
         log.info("從購物車創建訂單: memberId={}", memberId);
 
         // 1. 獲取購物車項目
@@ -173,41 +220,6 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("訂單創建完成: orderId={}, totalAmount={}", order.getId(), totalAmount);
         return order;
-    }
-
-    @Override
-    @Transactional
-    public Order createOrderFromCart(Long memberId, CreateOrderRequest request, String idempotencyKey) {
-        if (idempotencyKey == null) {
-            return createOrderFromCart(memberId, request);
-        }
-
-        String redisKey = "order:idempotency:" + memberId + ":" + idempotencyKey;
-
-        // SETNX 原子佔位，防止並行請求同時通過
-        Boolean acquired = redisTemplate.opsForValue()
-                .setIfAbsent(redisKey, "PENDING", 24, TimeUnit.HOURS);
-
-        if (Boolean.FALSE.equals(acquired)) {
-            // 鍵已存在，查回已建立的訂單
-            Object existingOrderId = redisTemplate.opsForValue().get(redisKey);
-            if (existingOrderId != null && !"PENDING".equals(existingOrderId.toString())) {
-                return orderDao.findById(Long.parseLong(existingOrderId.toString()))
-                        .orElseThrow(() -> new BusinessException(ResponseCode.ORDER_NOT_FOUND));
-            }
-            throw new BusinessException(ResponseCode.CONFLICT, "訂單正在建立中，請稍後重試");
-        }
-
-        try {
-            Order order = createOrderFromCart(memberId, request);
-            // 建單成功，將 PENDING 替換成實際訂單 ID
-            redisTemplate.opsForValue().set(redisKey, order.getId().toString(), 24, TimeUnit.HOURS);
-            return order;
-        } catch (Exception e) {
-            // 建單失敗，釋放佔位鍵
-            redisTemplate.delete(redisKey);
-            throw e;
-        }
     }
 
     /**
