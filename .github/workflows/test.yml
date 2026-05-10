@@ -76,10 +76,12 @@ jobs:
           echo "Postgres did not become ready" >&2
           exit 1
 
-      - name: Initialize schema
+      - name: Initialize schema and seed data
         env:
           PGPASSWORD: ci_password
-        run: psql -h localhost -U ci -d bark_bijou -f db/init.sql
+        run: |
+          psql -h localhost -U ci -d bark_bijou -f db/ddl.sql
+          psql -h localhost -U ci -d bark_bijou -f db/dml.sql
 
       - name: Build & test
         run: ./mvnw -B -ntp clean verify

@@ -51,7 +51,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/ddl.sql:/docker-entrypoint-initdb.d/01-ddl.sql:ro
+      - ./db/dml.sql:/docker-entrypoint-initdb.d/02-dml.sql:ro
     restart: unless-stopped
 
   redis:

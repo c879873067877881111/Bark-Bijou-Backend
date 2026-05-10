@@ -1,6 +1,16 @@
+-- =====================================================================
+-- DDL: 完整 schema (CREATE TABLE / ALTER / CREATE INDEX)
+-- =====================================================================
+-- 此檔由 docker-compose 透過 docker-entrypoint-initdb.d 在 postgres
+-- container **第一次起來且 volume 為空時**自動執行。
+--
+-- schema 改動 = 編輯本檔 + `docker-compose down -v && docker-compose up -d`
+-- (測試資料會被洗掉,dml.sql 會重跑種子)
+-- =====================================================================
+
 BEGIN;
 
--- 清理現有數據
+-- 清理現有 schema(只在重跑時生效;第一次起 container 時 schema 是空的)
 DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
 
@@ -58,7 +68,7 @@ CREATE TABLE product_tags (
 );
 
 -- ============================================================
--- 2. member（暫不加 vip_levels FK，稍後 ALTER）
+-- 2. member(暫不加 vip_levels FK,稍後 ALTER)
 -- ============================================================
 
 CREATE TABLE member (
@@ -88,7 +98,7 @@ CREATE TABLE member (
 );
 
 -- ============================================================
--- 3. article（暫不加 member/dogs FK，稍後 ALTER）
+-- 3. article(暫不加 member/dogs FK,稍後 ALTER)
 -- ============================================================
 
 CREATE TABLE article (
@@ -109,13 +119,6 @@ CREATE TABLE article (
   article_images VARCHAR(255),
   category_name VARCHAR(255) NOT NULL
 );
-
--- Migration: 將 article 表中非必要欄位改為允許 NULL
--- ALTER TABLE article ALTER COLUMN dogs_breed DROP NOT NULL;
--- ALTER TABLE article ALTER COLUMN dogs_images DROP NOT NULL;
--- ALTER TABLE article ALTER COLUMN content2 DROP NOT NULL;
--- ALTER TABLE article ALTER COLUMN event_id DROP NOT NULL;
--- ALTER TABLE article ALTER COLUMN article_images DROP NOT NULL;
 
 -- ============================================================
 -- 4. product 及其子表
@@ -167,7 +170,7 @@ CREATE TABLE product_tag_map (
 );
 
 -- ============================================================
--- 5. coupons（必須在 orders 之前）
+-- 5. coupons(必須在 orders 之前)
 -- ============================================================
 
 CREATE TABLE coupons (
@@ -440,67 +443,18 @@ CREATE INDEX idx_article_comments_article ON article_comments(article_id);
 CREATE INDEX idx_article_comments_member ON article_comments(member_id);
 
 -- ============================================================
--- 10. 種子資料
+-- 10. member 額外索引(原 V1 migration 的內容)
 -- ============================================================
+-- google_uid partial UNIQUE:OAuth2 race condition 防護的 DB 端保險;
+-- 用 partial index (WHERE google_uid IS NOT NULL) 是因為大量未綁 Google
+-- 的帳號 google_uid 為 NULL,partial index 更明確且省空間。
+CREATE UNIQUE INDEX uniq_member_google_uid
+    ON member (google_uid)
+    WHERE google_uid IS NOT NULL;
 
-INSERT INTO vip_levels (name, minimum_points, discount_percentage, benefits) VALUES
-('Bronze', 0, 0, '基礎會員'),
-('Silver', 1000, 5, '5%折扣,生日優惠'),
-('Gold', 5000, 10, '10%折扣,免運費,優先客服'),
-('Platinum', 15000, 15, '15%折扣,專屬優惠,VIP活動');
-
--- ============================================================
--- Migration: widen reset_token for Base64 tokens (run on existing DB)
--- ALTER TABLE member ALTER COLUMN reset_token TYPE VARCHAR(255);
--- ============================================================
-
-INSERT INTO order_status (name, description, color, sort_order) VALUES
-('pending', '待處理', '#ffc107', 1),
-('confirmed', '已確認', '#17a2b8', 2),
-('processing', '處理中', '#007bff', 3),
-('shipped', '已出貨', '#fd7e14', 4),
-('delivered', '已送達', '#28a745', 5),
-('cancelled', '已取消', '#dc3545', 6),
-('refunded', '已退款', '#6c757d', 7);
-
-INSERT INTO order_payment (name, description) VALUES
-('信用卡', '信用卡線上支付'),
-('綠界付款', '綠界第三方支付'),
-('轉帳', '銀行轉帳'),
-('貨到付款', '送達時付款');
-
-INSERT INTO brand (name, description, logo_url) VALUES
-('PetCare', '專業寵物護理品牌', '/images/brands/petcare.jpg'),
-('DogLife', '狗狗生活用品', '/images/brands/doglife.jpg'),
-('NutriPet', '營養寵物食品', '/images/brands/nutripet.jpg'),
-('PlayTime', '寵物玩具專家', '/images/brands/playtime.jpg'),
-('HealthyPaws', '寵物健康護理', '/images/brands/healthypaws.jpg');
-
-INSERT INTO category (name, description, image_url) VALUES
-('食品', '寵物食品類', '/images/categories/food.jpg'),
-('玩具', '寵物玩具類', '/images/categories/toys.jpg'),
-('護理', '寵物護理用品', '/images/categories/care.jpg'),
-('服飾', '寵物服飾配件', '/images/categories/clothing.jpg'),
-('健康', '寵物健康用品', '/images/categories/health.jpg');
-
-INSERT INTO product (name, description, price, sale_price, sku, stock_quantity, brand_id, category_id, weight) VALUES
-('高級狗糧 2kg', '營養均衡的高品質狗糧,適合成犬', 899.00, 799.00, 'DOG-FOOD-001', 50, 3, 1, 2.0),
-('貓咪互動玩具', '智能互動球,讓貓咪自己玩耍', 299.00, NULL, 'CAT-TOY-001', 30, 4, 2, 0.2),
-('寵物洗毛精', '溫和配方,適合敏感肌膚', 199.00, 179.00, 'PET-SHAMPOO-001', 25, 1, 3, 0.5),
-('狗狗雨衣', '防水透氣,多種尺寸', 399.00, NULL, 'DOG-CLOTH-001', 15, 2, 4, 0.3),
-('維生素補充劑', '增強免疫力,天然成分', 599.00, 549.00, 'PET-VIT-001', 40, 5, 5, 0.1);
-
-INSERT INTO product_images (product_id, image_url, alt_text, is_primary, sort_order) VALUES
-(1, '/images/products/dog-food-1.jpg', '高級狗糧主圖', TRUE, 1),
-(1, '/images/products/dog-food-1-2.jpg', '狗糧包裝背面', FALSE, 2),
-(2, '/images/products/cat-toy-1.jpg', '貓咪玩具主圖', TRUE, 1),
-(3, '/images/products/shampoo-1.jpg', '寵物洗毛精', TRUE, 1),
-(4, '/images/products/raincoat-1.jpg', '狗狗雨衣', TRUE, 1),
-(5, '/images/products/vitamin-1.jpg', '維生素補充劑', TRUE, 1);
-
--- 測試帳號 (密碼: password)
-INSERT INTO member (role, username, realname, email, password, phone, gender, email_validated, vip_levels_id) VALUES
-('USER', 'testuser', '測試用戶', 'test@example.com', '$2b$10$eDcdZCnC2/nCYZeOgbiVlOxbafGhbcwhUYrWxcJr51cheE/g5IC5a', '0912345678', 'male', TRUE, 1),
-('ADMIN', 'admin', '系統管理員', 'admin@example.com', '$2b$10$eDcdZCnC2/nCYZeOgbiVlOxbafGhbcwhUYrWxcJr51cheE/g5IC5a', '0987654321', 'female', TRUE, 4);
+-- reset_token 一般索引:findByResetToken 用,大多時候為 NULL,partial 省空間。
+CREATE INDEX idx_member_reset_token
+    ON member (reset_token)
+    WHERE reset_token IS NOT NULL;
 
 COMMIT;

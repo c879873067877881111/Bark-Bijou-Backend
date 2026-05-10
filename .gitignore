@@ -60,3 +60,9 @@ server.log
 
 # Local-only review/security tracking (do NOT push to public repo)
 REVIEW_TODO.md
+
+# Personal interview prep notes (do NOT push)
+docs/interview-prep.md
+
+# Auto-generated Swagger snapshot — Swagger UI 會即時生成,commit 進來只會 desync
+docs/api-docs.json
