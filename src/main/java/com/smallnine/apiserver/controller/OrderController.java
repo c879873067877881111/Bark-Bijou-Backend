@@ -105,18 +105,20 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orderItems));
     }
 
-    @Operation(summary = "從購物車創建訂單", description = "從當前用戶的購物車創建新訂單")
+    @Operation(summary = "從購物車創建訂單", description = "從當前用戶的購物車創建新訂單。可選 Idempotency-Key header 防止重複下單（UUID，24 小時內同 key 回傳同一張單）")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "訂單創建成功"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "購物車為空或庫存不足"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "未授權")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "未授權"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "訂單正在建立中，請稍後重試")
     })
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
             @AuthenticationPrincipal UserDetails userDetails,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody CreateOrderRequest request) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
-        Order order = orderService.createOrderFromCart(user.getId(), request);
+        Order order = orderService.createOrderFromCart(user.getId(), request, idempotencyKey);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("訂單創建成功", OrderResponse.fromEntity(order)));
     }
