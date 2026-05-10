@@ -10,7 +10,9 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # docker-entrypoint-initdb.d 按檔名字母順序執行,01- → 02- 確保 ddl 先於 dml
+      - ./db/ddl.sql:/docker-entrypoint-initdb.d/01-ddl.sql:ro
+      - ./db/dml.sql:/docker-entrypoint-initdb.d/02-dml.sql:ro
     restart: unless-stopped
 
   redis:
