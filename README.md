@@ -3,7 +3,7 @@
 Spring Boot 3.5.7 + PostgreSQL + Redis 的電商 API 網站
 
 ## 技術棧
-- **後端**: Spring Boot 3.5.7 (Java 21) + MyBatis
+- **後端**: Spring Boot 3.5.7 (Java 17) + MyBatis
 - **資料庫**: PostgreSQL 15 + Redis 7  
 - **認證**: Spring Security + JWT
 - **文件檔案**: OpenAPI 3 + Swagger UI
@@ -11,7 +11,7 @@ Spring Boot 3.5.7 + PostgreSQL + Redis 的電商 API 網站
 ## 啟動
 
 ### 環境要求
-- Java 21+
+- Java 17+
 - Docker & Docker Compose  
 - Maven 3.6+
 
