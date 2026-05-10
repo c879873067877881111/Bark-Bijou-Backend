@@ -57,3 +57,6 @@ uploads/
 logs/
 app.log
 server.log
+
+# Local-only review/security tracking (do NOT push to public repo)
+REVIEW_TODO.md
