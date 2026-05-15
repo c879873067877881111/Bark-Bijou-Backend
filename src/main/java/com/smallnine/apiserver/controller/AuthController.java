@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,11 @@ public class AuthController {
     private final AuthService authService;
     private final OAuth2ExchangeService oAuth2ExchangeService;
     private final RateLimiterService rateLimiterService;
+
+    // #H1 fast-follow：只有部署在可信反向代理後才採信 X-Forwarded-For，
+    // 否則任何 client 都能偽造此 header，per-IP 限流形同虛設。預設關閉。
+    @Value("${app.rate-limit.trust-forwarded-for:false}")
+    private boolean trustForwardedFor;
     
     @Operation(summary = "用戶註冊", description = "註冊新用戶帳號")
     @ApiResponses(value = {
@@ -137,11 +143,17 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("若該信箱已註冊且尚未驗證，我們已寄出驗證信"));
     }
 
-    /** 取用戶端 IP：優先 X-Forwarded-For 第一段（反向代理後），否則 remoteAddr */
+    /**
+     * 取用戶端 IP。X-Forwarded-For 可被 client 任意偽造，只有確定部署在
+     * 可信反向代理後（app.rate-limit.trust-forwarded-for=true）才採信其第一段；
+     * 否則一律用 remoteAddr，避免偽造 header 繞過 per-IP 限流。
+     */
     private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+        if (trustForwardedFor) {
+            String forwarded = request.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return forwarded.split(",")[0].trim();
+            }
         }
         return request.getRemoteAddr();
     }

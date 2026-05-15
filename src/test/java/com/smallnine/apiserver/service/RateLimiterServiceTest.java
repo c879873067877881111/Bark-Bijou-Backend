@@ -52,4 +52,23 @@ class RateLimiterServiceTest {
         assertThat(svc.tryResendVerification("x6@example.com", "4.4.4.4")).isFalse();
         assertThat(svc.tryResendVerification("y1@example.com", "5.5.5.5")).isTrue();
     }
+
+    /**
+     * 回歸：bucket 容器換成有界 Caffeine cache 後，灌入遠超上限的不同 key
+     * 不能爆掉、也不能讓限流失效——被鎖定的 email 仍要被擋。
+     */
+    @Test
+    void survivesHighCardinalityChurn_andStillLimits() {
+        RateLimiterService svc = new RateLimiterService();
+
+        assertThat(svc.tryResendVerification("victim@example.com", "9.9.9.9")).isTrue();
+
+        // 灌 150k 個不同 email / IP（超過 maximumSize 100k），逼 Caffeine 淘汰
+        for (int i = 0; i < 150_000; i++) {
+            svc.tryResendVerification("noise" + i + "@example.com", "10.0." + (i % 256) + "." + (i % 7));
+        }
+
+        // 被鎖的 email 即使中間湧入大量雜訊，仍必須被擋（限流沒因淘汰而失效）
+        assertThat(svc.tryResendVerification("victim@example.com", "8.8.8.8")).isFalse();
+    }
 }

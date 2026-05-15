@@ -78,6 +78,11 @@
 			<artifactId>bucket4j-core</artifactId>
 			<version>8.7.0</version>
 		</dependency>
+		<!-- #H1 fast-follow：bucket 容器需有界，避免攻擊者塞爆記憶體（版本由 Spring Boot BOM 管） -->
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
