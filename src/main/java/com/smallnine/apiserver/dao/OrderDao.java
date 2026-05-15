@@ -48,6 +48,16 @@ public interface OrderDao {
      * 更新訂單狀態
      */
     int updateStatus(@Param("id") Long id, @Param("statusId") Long statusId);
+
+    /**
+     * CAS 取消：只有當訂單目前狀態仍屬可取消狀態時，才翻成已取消。
+     * 並發下只有一個 thread 會更新到 1 行，其餘 0 行——把競態收斂成唯一勝者。
+     *
+     * @return 受影響行數（1=本次取消成功；0=已被取消或目前狀態不可取消）
+     */
+    int cancelIfCancellable(@Param("id") Long id,
+                            @Param("cancelledStatusId") Long cancelledStatusId,
+                            @Param("fromStatusIds") List<Long> fromStatusIds);
     
     /**
      * 根據ID刪除訂單

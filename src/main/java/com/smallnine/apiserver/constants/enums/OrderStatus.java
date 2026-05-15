@@ -2,6 +2,9 @@ package com.smallnine.apiserver.constants.enums;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 public enum OrderStatus {
     PENDING(1L, "待處理"),
@@ -31,6 +34,19 @@ public enum OrderStatus {
 
     public boolean canCancel() {
         return this == PENDING || this == CONFIRMED;
+    }
+
+    /**
+     * 可被取消的來源狀態 id 清單（單一真相來源，給 cancel 的 CAS SQL 用）。
+     */
+    public static List<Long> cancellableStatusIds() {
+        List<Long> ids = new ArrayList<>();
+        for (OrderStatus s : values()) {
+            if (s.canCancel()) {
+                ids.add(s.id);
+            }
+        }
+        return ids;
     }
 
     public boolean canTransitionTo(OrderStatus newStatus) {
