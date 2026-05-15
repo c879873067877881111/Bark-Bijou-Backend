@@ -132,6 +132,18 @@
         WHERE id = #{id}
     </update>
 
+    <!-- #C3 CAS 取消：狀態仍可取消才翻成已取消，並發下只有一個 thread 更新到 1 行 -->
+    <update id="cancelIfCancellable">
+        UPDATE orders SET
+            status_id = #{cancelledStatusId},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND status_id IN
+        <foreach item="sid" collection="fromStatusIds" open="(" separator="," close=")">
+            #{sid}
+        </foreach>
+    </update>
+
     <!-- 根據ID刪除訂單 -->
     <delete id="deleteById">
         DELETE FROM orders WHERE id = #{id}

@@ -33,6 +33,19 @@ public enum OrderStatus {
         return this == PENDING || this == CONFIRMED;
     }
 
+    /**
+     * 可被取消的來源狀態 id 清單（單一真相來源，給 cancel 的 CAS SQL 用）。
+     */
+    public static java.util.List<Long> cancellableStatusIds() {
+        java.util.List<Long> ids = new java.util.ArrayList<>();
+        for (OrderStatus s : values()) {
+            if (s.canCancel()) {
+                ids.add(s.id);
+            }
+        }
+        return ids;
+    }
+
     public boolean canTransitionTo(OrderStatus newStatus) {
         return switch (this) {
             case PENDING -> newStatus == CONFIRMED || newStatus == CANCELLED;

@@ -268,20 +268,21 @@ public class OrderServiceImpl implements OrderService {
         Order order = findByIdInternal(orderId);
         validateOrderOwnership(order, memberId);
 
-        // 檢查訂單狀態是否允許取消
-        OrderStatus currentStatus = OrderStatus.fromId(order.getStatusId());
-        if (!currentStatus.canCancel()) {
-            throw new BusinessException(ResponseCode.ORDER_STATUS_ERROR, "訂單狀態為「" + currentStatus.getDescription() + "」，無法取消");
+        // #C3：先用 CAS 一步把狀態翻成已取消（狀態仍可取消才會更新到行）。
+        // 並發下只有唯一勝出的 thread 拿到 updated=1，敗者拿 0、直接回明確訊息，
+        // 不再走「先還庫存→updateOrderStatus 撞狀態→整筆 rollback」那套浪費寫入 + 誤導訊息。
+        int updated = orderDao.cancelIfCancellable(
+                orderId, OrderStatus.CANCELLED.getId(), OrderStatus.cancellableStatusIds());
+        if (updated == 0) {
+            throw new BusinessException(ResponseCode.ORDER_STATUS_ERROR,
+                    "訂單已取消，或目前狀態無法取消");
         }
 
-        // 恢復庫存（原子操作）
+        // 確認唯一勝出後才還庫存（原子操作）
         List<OrderItem> orderItems = orderItemDao.findByOrderId(orderId);
         for (OrderItem item : orderItems) {
             productDao.increaseStock(item.getProductId(), item.getQuantity());
         }
-
-        // 更新訂單狀態為已取消
-        updateOrderStatus(orderId, OrderStatus.CANCELLED.getId());
 
         log.info("訂單取消成功: orderId={}", orderId);
     }
