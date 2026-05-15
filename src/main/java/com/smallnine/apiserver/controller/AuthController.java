@@ -4,8 +4,10 @@ import com.smallnine.apiserver.constants.enums.ResponseCode;
 import com.smallnine.apiserver.dto.*;
 import com.smallnine.apiserver.exception.BusinessException;
 import com.smallnine.apiserver.security.oauth2.OAuth2ExchangeService;
+import com.smallnine.apiserver.service.AuthRateLimitService;
 import com.smallnine.apiserver.service.AuthService;
 import com.smallnine.apiserver.service.RateLimiterService;
+import com.smallnine.apiserver.utils.ClientIpResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -13,12 +15,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,12 +34,9 @@ public class AuthController {
     private final AuthService authService;
     private final OAuth2ExchangeService oAuth2ExchangeService;
     private final RateLimiterService rateLimiterService;
+    private final AuthRateLimitService authRateLimitService;
+    private final ClientIpResolver clientIpResolver;
 
-    // #H1 fast-follow：只有部署在可信反向代理後才採信 X-Forwarded-For，
-    // 否則任何 client 都能偽造此 header，per-IP 限流形同虛設。預設關閉。
-    @Value("${app.rate-limit.trust-forwarded-for:false}")
-    private boolean trustForwardedFor;
-    
     @Operation(summary = "用戶註冊", description = "註冊新用戶帳號")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "註冊成功"),
@@ -43,7 +45,11 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "內部服務器錯誤")
     })
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody RegisterRequest request,
+                                                              HttpServletRequest httpRequest) {
+        // #H2 per-IP throttle：擋同 IP 大量註冊（帳號農場 / 枚舉）
+        authRateLimitService.assertIpQuota("register", clientIpResolver.resolve(httpRequest),
+                5, Duration.ofMinutes(10));
         UserResponse user = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("註冊成功", user));
@@ -57,9 +63,20 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "內部服務器錯誤")
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse authResponse = authService.login(request);
-        return ResponseEntity.ok(ApiResponse.success("登入成功", authResponse));
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request,
+                                                           HttpServletRequest httpRequest) {
+        String ip = clientIpResolver.resolve(httpRequest);
+        // #H2 前置：帳號被鎖 / 該 IP 失敗爆表，連嘗試都不給
+        authRateLimitService.assertLoginAllowed(request.getUsernameOrEmail(), ip);
+        try {
+            AuthResponse authResponse = authService.login(request);
+            authRateLimitService.recordLoginSuccess(request.getUsernameOrEmail());
+            return ResponseEntity.ok(ApiResponse.success("登入成功", authResponse));
+        } catch (UsernameNotFoundException | BadCredentialsException e) {
+            // 只把「帳密錯誤」算進暴力破解計數；帳號停用等狀態不計
+            authRateLimitService.recordLoginFailure(request.getUsernameOrEmail(), ip);
+            throw e;
+        }
     }
     
     @Operation(summary = "獲取當前用戶訊息", description = "根據存取令牌獲取當前登入用戶的詳細訊息")
@@ -121,7 +138,11 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "code 無效或已過期")
     })
     @PostMapping("/oauth/exchange")
-    public ResponseEntity<ApiResponse<AuthResponse>> exchangeOAuth2Code(@Valid @RequestBody OAuth2ExchangeRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> exchangeOAuth2Code(@Valid @RequestBody OAuth2ExchangeRequest request,
+                                                                        HttpServletRequest httpRequest) {
+        // #H2 per-IP throttle：code 一次性且 60s 失效，這裡擋暴力猜 code
+        authRateLimitService.assertIpQuota("oauth-exchange", clientIpResolver.resolve(httpRequest),
+                20, Duration.ofMinutes(5));
         AuthResponse authResponse = oAuth2ExchangeService.exchange(request.getCode());
         return ResponseEntity.ok(ApiResponse.success("登入成功", authResponse));
     }
@@ -135,26 +156,11 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> resendVerification(@RequestParam String email,
                                                                   HttpServletRequest request) {
         // #H1 限流：email 與 IP 任一超限即擋，避免 email 炸彈 / 整段 IP 掃信箱
-        if (!rateLimiterService.tryResendVerification(email, clientIp(request))) {
+        if (!rateLimiterService.tryResendVerification(email, clientIpResolver.resolve(request))) {
             throw new BusinessException(ResponseCode.TOO_MANY_REQUESTS);
         }
         // #H1 防枚舉：service 對「不存在 / 已驗證」靜默處理，這裡一律回固定訊息
         authService.resendVerificationEmail(email);
         return ResponseEntity.ok(ApiResponse.success("若該信箱已註冊且尚未驗證，我們已寄出驗證信"));
-    }
-
-    /**
-     * 取用戶端 IP。X-Forwarded-For 可被 client 任意偽造，只有確定部署在
-     * 可信反向代理後（app.rate-limit.trust-forwarded-for=true）才採信其第一段；
-     * 否則一律用 remoteAddr，避免偽造 header 繞過 per-IP 限流。
-     */
-    private String clientIp(HttpServletRequest request) {
-        if (trustForwardedFor) {
-            String forwarded = request.getHeader("X-Forwarded-For");
-            if (forwarded != null && !forwarded.isBlank()) {
-                return forwarded.split(",")[0].trim();
-            }
-        }
-        return request.getRemoteAddr();
     }
 }
