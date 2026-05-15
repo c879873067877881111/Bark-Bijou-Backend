@@ -133,7 +133,18 @@ public class AuthServiceImpl implements AuthService {
                 .map(userId -> {
                     User user = userDao.findById(userId)
                             .orElseThrow(() -> new ResourceNotFoundException("用戶", userId));
-                    
+
+                    // #NEW-A：refresh 一定要 reload User 並擋停用帳號。
+                    // 否則 admin 在 DB 把 email_validated 設 false 後,該 user 靠手上的
+                    // refresh token 還能無限重發 access token(最長 7 天)。
+                    // 帳號既已停用,該 user 全部裝置 session 一併撤銷,不只手上這顆。
+                    if (!user.isEnabled()) {
+                        refreshTokenService.revokeByUser(user);
+                        log.warn("action=refresh_token username={} user_id={} result=failure reason=account_disabled",
+                                user.getUsername(), user.getId());
+                        throw new AccountDisabledException();
+                    }
+
                     String newAccessToken = jwtUtil.generateAccessToken(user.getUsername());
                     // Refresh rotation:撤銷剛用掉的這顆 + 發新顆,其他裝置 session 不動
                     RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user, requestRefreshToken);
