@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,6 +63,7 @@ public class BrandController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "未授權")
     })
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<Brand>> createBrand(@Valid @RequestBody BrandRequest request) {
         Brand brand = brandService.createBrand(request);
@@ -77,6 +79,7 @@ public class BrandController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "品牌不存在")
     })
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Brand>> updateBrand(
             @PathVariable Long id,
@@ -92,6 +95,7 @@ public class BrandController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "品牌不存在")
     })
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);
