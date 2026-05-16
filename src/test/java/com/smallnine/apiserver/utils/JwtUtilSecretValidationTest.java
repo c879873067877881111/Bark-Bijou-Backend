@@ -53,6 +53,19 @@ class JwtUtilSecretValidationTest {
     }
 
     @Test
+    void multiByteSecret_judgedByUtf8ByteLengthNotCharCount() {
+        // 16 個中日韓字：char 數 16（< 32）但 UTF-8 是 48 bytes（>= 32）。
+        // 若誤用 char 數或非 UTF-8 charset 就會錯判，這裡釘死「走 UTF-8 byte 長度」。
+        JwtUtil jwtUtil = newJwtUtil("一二三四五六七八九十壹貳參肆伍陸");
+
+        assertThatCode(() -> ReflectionTestUtils.invokeMethod(jwtUtil, "initSigningKey"))
+                .doesNotThrowAnyException();
+
+        String token = jwtUtil.generateToken("bob");
+        assertThat(jwtUtil.extractUsername(token)).isEqualTo("bob");
+    }
+
+    @Test
     void shortSecret_failsAtInitWithLength() {
         // 31 bytes，差 1 byte 不到 256 bit
         JwtUtil jwtUtil = newJwtUtil("0123456789abcdef0123456789abcde");
