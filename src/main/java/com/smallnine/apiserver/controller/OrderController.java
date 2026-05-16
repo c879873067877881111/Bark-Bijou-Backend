@@ -112,6 +112,7 @@ public class OrderController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "未授權"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "訂單正在建立中，請稍後重試")
     })
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -147,6 +148,7 @@ public class OrderController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "無權限操作此訂單"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "訂單不存在")
     })
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{orderId}/cancel")
     public ResponseEntity<ApiResponse<Void>> cancelOrder(
             @AuthenticationPrincipal UserDetails userDetails,

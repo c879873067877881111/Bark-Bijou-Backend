@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,7 @@ public class PaymentController {
 
     @Operation(summary = "建立 ECPay 付款訂單")
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create-order")
     public ResponseEntity<ApiResponse<Map<String, String>>> createOrder(
             @AuthenticationPrincipal UserDetails userDetails,
