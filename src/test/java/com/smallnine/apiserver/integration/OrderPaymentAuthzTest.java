@@ -9,10 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -46,12 +44,6 @@ class OrderPaymentAuthzTest extends AbstractIntegrationTest {
         return new UserPrincipal(u);
     }
 
-    private void assertNotAuthBlocked(MvcResult r) {
-        int s = r.getResponse().getStatus();
-        assertTrue(s != 401 && s != 403,
-                "已認證 USER 不該被授權層擋下，實際狀態=" + s);
-    }
-
     // ── 契約：匿名一律 401 ──
 
     @Test
@@ -68,28 +60,30 @@ class OrderPaymentAuthzTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // ── 沒被過度限制：已認證 USER 通過授權層（下游業務錯誤如 400/404 可接受）──
+    // ── 沒被過度限制：已認證 USER 通過授權層，落到下游業務（精確下游碼，非 401/403）──
+    // 註：跨租戶 ownership（USER A 取消 USER B 訂單 → 403）由 OrderServiceTest.cancelOrder_notOwner
+    // 覆蓋；本檔只驗 #M1 的 authz 註解契約，不重複測 ownership 行為。
 
     @Test
-    void createOrder_asUser_passesAuthz() throws Exception {
-        MvcResult r = mockMvc.perform(post("/api/orders").with(user(seedUser()))
+    void createOrder_asUser_passesAuthzThenValidation400() throws Exception {
+        // 授權通過 → 落到 @Valid（空 body 缺必填）→ 400，而非 401/403
+        mockMvc.perform(post("/api/orders").with(user(seedUser()))
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
-                .andReturn();
-        assertNotAuthBlocked(r);
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void cancelOrder_asUser_passesAuthz() throws Exception {
-        MvcResult r = mockMvc.perform(put("/api/orders/999999/cancel").with(user(seedUser())))
-                .andReturn();
-        assertNotAuthBlocked(r);
+    void cancelOrder_asUser_passesAuthzThenNotFound404() throws Exception {
+        // 授權通過 → 訂單不存在 → 404，而非 401/403
+        mockMvc.perform(put("/api/orders/999999/cancel").with(user(seedUser())))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void paymentCreateOrder_asUser_passesAuthz() throws Exception {
-        MvcResult r = mockMvc.perform(post("/api/ecpay/create-order").with(user(seedUser()))
+    void paymentCreateOrder_asUser_passesAuthzThenValidation400() throws Exception {
+        // 授權通過 → @Valid（缺 orderId/totalAmount）→ 400，而非 401/403
+        mockMvc.perform(post("/api/ecpay/create-order").with(user(seedUser()))
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
-                .andReturn();
-        assertNotAuthBlocked(r);
+                .andExpect(status().isBadRequest());
     }
 }
