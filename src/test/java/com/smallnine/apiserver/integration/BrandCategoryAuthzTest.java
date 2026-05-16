@@ -83,10 +83,10 @@ class BrandCategoryAuthzTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void categoryCreate_asAdmin_notForbidden() throws Exception {
+    void categoryCreate_asAdmin_created() throws Exception {
         mockMvc.perform(post("/api/categories").with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("name", "admin-category"))))
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().isCreated());
     }
 }
