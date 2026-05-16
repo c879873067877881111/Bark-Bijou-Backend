@@ -142,7 +142,21 @@ public class OrderServiceImpl implements OrderService {
             throw e;
         }
 
-        redisTemplate.opsForValue().set(redisKey, order.getId().toString(), 24, TimeUnit.HOURS);
+        // DB 已 commit，訂單建立成功；Redis 收尾是 best-effort。
+        // 若 PENDING→orderId 寫入失敗，必須 delete(key) 自癒：
+        // 留著 PENDING 會讓 24h 內 retry 永遠 CONFLICT，TTL 過後又重複下單。
+        // delete 後最壞情況只是「retry 重建一張單」，遠優於「鎖死客人 24h 後仍重複」。
+        try {
+            redisTemplate.opsForValue().set(redisKey, order.getId().toString(), 24, TimeUnit.HOURS);
+        } catch (Exception finalize) {
+            try {
+                redisTemplate.delete(redisKey);
+            } catch (Exception cleanup) {
+                log.warn("idempotency=cleanup_failed key={} reason={}", redisKey, cleanup.getMessage());
+            }
+            log.warn("idempotency=finalize_failed key={} orderId={} reason={}",
+                    redisKey, order.getId(), finalize.getMessage());
+        }
         return order;
     }
 
