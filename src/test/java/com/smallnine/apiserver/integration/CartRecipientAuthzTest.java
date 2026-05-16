@@ -95,4 +95,21 @@ class CartRecipientAuthzTest extends AbstractIntegrationTest {
         mockMvc.perform(delete("/api/auth/me/recipients/999999").with(user(seedUser())))
                 .andExpect(status().isNotFound());
     }
+
+    // PUT 端點正向斷言（合法輸入 + 不存在 id → 授權通過後落到 404，非 401/403）
+
+    @Test
+    void updateCartItem_asUser_passesAuthzThenNotFound404() throws Exception {
+        mockMvc.perform(put("/api/cart/items/999999").param("quantity", "1")
+                        .with(user(seedUser())))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateRecipient_asUser_passesAuthzThenNotFound404() throws Exception {
+        mockMvc.perform(put("/api/auth/me/recipients/999999").with(user(seedUser()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"x\",\"phone\":\"0900000000\"}"))
+                .andExpect(status().isNotFound());
+    }
 }
