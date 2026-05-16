@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +52,7 @@ public class CartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "商品不存在"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "內部服務器錯誤")
     })
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<CartItem>> addToCart(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -69,6 +71,7 @@ public class CartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "購物車項目不存在"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "內部服務器錯誤")
     })
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/items/{cartItemId}")
     public ResponseEntity<ApiResponse<CartItem>> updateCartItemQuantity(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -86,6 +89,7 @@ public class CartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "購物車項目不存在"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "內部服務器錯誤")
     })
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/items/{cartItemId}")
     public ResponseEntity<ApiResponse<Void>> removeFromCart(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -101,6 +105,7 @@ public class CartController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "未授權"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "內部服務器錯誤")
     })
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping
     public ResponseEntity<ApiResponse<Void>> clearCart(@AuthenticationPrincipal UserDetails userDetails) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);

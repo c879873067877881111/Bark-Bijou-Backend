@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,7 @@ public class RecipientController {
     }
 
     @Operation(summary = "新增收件人")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ResponseEntity<ApiResponse<Recipient>> addRecipient(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -55,6 +57,7 @@ public class RecipientController {
     }
 
     @Operation(summary = "修改收件人")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Recipient>> updateRecipient(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -73,6 +76,7 @@ public class RecipientController {
     }
 
     @Operation(summary = "刪除收件人")
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteRecipient(
             @AuthenticationPrincipal UserDetails userDetails,
