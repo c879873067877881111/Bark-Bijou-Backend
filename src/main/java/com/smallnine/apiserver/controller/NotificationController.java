@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.Valid;
@@ -40,6 +41,7 @@ public class NotificationController {
     }
 
     @Operation(summary = "標記單筆已讀")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/read/{id}")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -50,6 +52,7 @@ public class NotificationController {
     }
 
     @Operation(summary = "新增通知")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ResponseEntity<ApiResponse<Notification>> createNotification(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -67,6 +70,7 @@ public class NotificationController {
     }
 
     @Operation(summary = "全部已讀")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/read-all")
     public ResponseEntity<ApiResponse<Void>> markAllAsRead(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -76,6 +80,7 @@ public class NotificationController {
     }
 
     @Operation(summary = "刪除通知")
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteNotification(
             @AuthenticationPrincipal UserDetails userDetails,

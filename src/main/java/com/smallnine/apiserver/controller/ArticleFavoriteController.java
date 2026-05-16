@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -40,6 +41,7 @@ public class ArticleFavoriteController {
     }
 
     @Operation(summary = "收藏文章")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{articleId}")
     public ApiResponse<Map<String, Object>> addFavorite(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -51,6 +53,7 @@ public class ArticleFavoriteController {
     }
 
     @Operation(summary = "取消收藏文章")
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{articleId}")
     public ApiResponse<Map<String, Object>> removeFavorite(
             @AuthenticationPrincipal UserDetails userDetails,
