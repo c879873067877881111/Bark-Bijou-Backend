@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @Operation(summary = "更新會員資料 (FormData)")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/api/member/profile/edit")
     public ResponseEntity<ApiResponse<Map<String, Object>>> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -46,6 +48,7 @@ public class MemberController {
     }
 
     @Operation(summary = "修改密碼 (URLSearchParams)")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/api/member/profile/{memberId}/password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @AuthenticationPrincipal UserDetails userDetails,
