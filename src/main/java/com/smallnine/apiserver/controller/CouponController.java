@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,7 @@ public class CouponController {
     }
 
     @Operation(summary = "領取優惠券")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/claim")
     public ResponseEntity<ApiResponse<MemberCoupon>> claimCoupon(
             @AuthenticationPrincipal UserDetails userDetails,
