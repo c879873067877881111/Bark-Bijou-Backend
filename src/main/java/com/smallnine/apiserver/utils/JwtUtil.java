@@ -2,12 +2,14 @@ package com.smallnine.apiserver.utils;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,8 +28,32 @@ public class JwtUtil {
     @Value("${jwt.refresh-token.expiration}")
     private Long refreshTokenExpiration;
     
+    // 簽章金鑰只在 startup 建一次：驗證與實際使用走同一條路徑，
+    // 不再「平時沒事、第一次簽 token 才炸」。
+    private SecretKey signingKey;
+
+    /**
+     * startup 即驗證 jwt.secret：缺值/空白/不足 256 bit 直接讓 context 啟動失敗，
+     * 把失敗點從「第一次簽 token」提前到「服務起不來」。
+     * getBytes 鎖死 UTF-8，不吃 platform default charset（跨環境結果一致）。
+     */
+    @PostConstruct
+    void initSigningKey() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "jwt.secret 未設定：請在 .env 設定 JWT_SECRET（HS256 需至少 32 bytes）");
+        }
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "jwt.secret 太短：HS256 需至少 32 bytes（256 bit），目前僅 "
+                            + keyBytes.length + " bytes");
+        }
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+    }
+
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return signingKey;
     }
     
     public String extractUsername(String token) {
