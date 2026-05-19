@@ -4,13 +4,13 @@ import com.smallnine.apiserver.dao.PointsDao;
 import com.smallnine.apiserver.entity.Points;
 import com.smallnine.apiserver.service.PointsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class PointsServiceImpl implements PointsService {
 

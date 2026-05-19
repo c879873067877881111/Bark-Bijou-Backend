@@ -14,13 +14,13 @@ import com.smallnine.apiserver.entity.SitterGallery;
 import com.smallnine.apiserver.exception.BusinessException;
 import com.smallnine.apiserver.service.SitterService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class SitterServiceImpl implements SitterService {
 

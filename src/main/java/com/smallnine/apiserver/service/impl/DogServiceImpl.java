@@ -6,12 +6,12 @@ import com.smallnine.apiserver.entity.Dog;
 import com.smallnine.apiserver.exception.BusinessException;
 import com.smallnine.apiserver.service.DogService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class DogServiceImpl implements DogService {
 

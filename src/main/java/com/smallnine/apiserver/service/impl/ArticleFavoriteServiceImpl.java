@@ -5,12 +5,12 @@ import com.smallnine.apiserver.dao.ArticleFavoriteDao;
 import com.smallnine.apiserver.entity.Article;
 import com.smallnine.apiserver.service.ArticleFavoriteService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class ArticleFavoriteServiceImpl implements ArticleFavoriteService {
 

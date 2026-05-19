@@ -7,13 +7,13 @@ import com.smallnine.apiserver.entity.User;
 import com.smallnine.apiserver.exception.AccountDisabledException;
 import com.smallnine.apiserver.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class OAuth2ExchangeService {
 

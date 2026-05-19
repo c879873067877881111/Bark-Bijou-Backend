@@ -1,5 +1,6 @@
 package com.smallnine.apiserver.service;
 
+import com.smallnine.apiserver.service.impl.RateLimiterServiceImpl;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +14,7 @@ class RateLimiterServiceTest {
 
     @Test
     void sameEmail_secondAttemptBlocked_evenFromDifferentIp() {
-        RateLimiterService svc = new RateLimiterService();
+        RateLimiterService svc = new RateLimiterServiceImpl();
 
         assertThat(svc.tryResendVerification("a@example.com", "1.1.1.1")).isTrue();
         assertThat(svc.tryResendVerification("a@example.com", "1.1.1.2")).isFalse();
@@ -21,7 +22,7 @@ class RateLimiterServiceTest {
 
     @Test
     void sameIp_blockedAfterFiveDistinctEmails() {
-        RateLimiterService svc = new RateLimiterService();
+        RateLimiterService svc = new RateLimiterServiceImpl();
         String ip = "2.2.2.2";
 
         for (int i = 1; i <= 5; i++) {
@@ -35,7 +36,7 @@ class RateLimiterServiceTest {
     /** 錯誤路徑：被擋的 email 立刻重試仍然被擋（額度未回補） */
     @Test
     void blockedEmail_staysBlockedOnImmediateRetry() {
-        RateLimiterService svc = new RateLimiterService();
+        RateLimiterService svc = new RateLimiterServiceImpl();
 
         assertThat(svc.tryResendVerification("b@example.com", "3.3.3.3")).isTrue();
         assertThat(svc.tryResendVerification("b@example.com", "3.3.3.4")).isFalse();
@@ -45,7 +46,7 @@ class RateLimiterServiceTest {
     /** 邊界：一個 IP 用爆不應影響另一個 IP */
     @Test
     void exhaustingOneIp_doesNotAffectAnotherIp() {
-        RateLimiterService svc = new RateLimiterService();
+        RateLimiterService svc = new RateLimiterServiceImpl();
         for (int i = 1; i <= 5; i++) {
             svc.tryResendVerification("x" + i + "@example.com", "4.4.4.4");
         }
@@ -59,7 +60,7 @@ class RateLimiterServiceTest {
      */
     @Test
     void survivesHighCardinalityChurn_andStillLimits() {
-        RateLimiterService svc = new RateLimiterService();
+        RateLimiterService svc = new RateLimiterServiceImpl();
 
         assertThat(svc.tryResendVerification("victim@example.com", "9.9.9.9")).isTrue();
 

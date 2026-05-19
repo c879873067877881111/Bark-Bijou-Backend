@@ -3,7 +3,7 @@ package com.smallnine.apiserver.service.impl;
 import com.smallnine.apiserver.service.EcpayService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -11,7 +11,7 @@ import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-@Service
+@Component
 @Slf4j
 public class EcpayServiceImpl implements EcpayService {
 
