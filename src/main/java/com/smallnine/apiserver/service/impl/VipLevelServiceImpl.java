@@ -9,14 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.VipLevelService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class VipLevelServiceImpl implements VipLevelService {

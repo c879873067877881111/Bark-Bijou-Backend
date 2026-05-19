@@ -12,12 +12,12 @@ import com.smallnine.apiserver.service.MailService;
 import com.smallnine.apiserver.service.OtpService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 

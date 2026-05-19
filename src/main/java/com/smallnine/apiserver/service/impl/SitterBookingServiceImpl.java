@@ -10,14 +10,14 @@ import com.smallnine.apiserver.entity.SitterBooking;
 import com.smallnine.apiserver.exception.BusinessException;
 import com.smallnine.apiserver.service.SitterBookingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class SitterBookingServiceImpl implements SitterBookingService {
 

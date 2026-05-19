@@ -12,14 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.BrandService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class BrandServiceImpl implements BrandService {

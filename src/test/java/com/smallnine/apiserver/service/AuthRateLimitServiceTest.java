@@ -1,6 +1,7 @@
 package com.smallnine.apiserver.service;
 
 import com.smallnine.apiserver.exception.BusinessException;
+import com.smallnine.apiserver.service.impl.AuthRateLimitServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +40,7 @@ class AuthRateLimitServiceTest {
 
     @BeforeEach
     void setUp() {
-        svc = new AuthRateLimitService(redisTemplate);
+        svc = new AuthRateLimitServiceImpl(redisTemplate);
     }
 
     @Test

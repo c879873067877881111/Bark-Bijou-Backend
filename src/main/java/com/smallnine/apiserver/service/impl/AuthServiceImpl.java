@@ -21,14 +21,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.smallnine.apiserver.service.AuthService;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
