@@ -59,4 +59,13 @@ class OrderTransactionBoundaryTest {
                 "冪等性編排不可標 @Transactional：會把 Redis SETNX / finalize 綁進 DB 交易，"
                         + "破壞『DB commit 完才寫 Redis orderId』的時序保證");
     }
+
+    @Test
+    void orderServiceImpl_classLevel_hasNoTransactional() {
+        // class-level @Transactional 會繼承到所有 method，等於繞過上面三條 method-level 守護。
+        // 必須一起擋下，否則設計守護有破口。
+        assertFalse(OrderServiceImpl.class.isAnnotationPresent(Transactional.class),
+                "OrderServiceImpl 不可在 class 上標 @Transactional："
+                        + "會把交易切面套到所有 method，包含冪等性編排，破壞交易邊界設計");
+    }
 }
