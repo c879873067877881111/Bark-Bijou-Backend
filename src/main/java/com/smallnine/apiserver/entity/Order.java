@@ -36,6 +36,7 @@ public class Order {
     private String discountType;
     private BigDecimal discountValue;
     private String notes;
+    private String idempotencyKey;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;

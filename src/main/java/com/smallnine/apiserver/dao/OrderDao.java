@@ -78,4 +78,10 @@ public interface OrderDao {
      * 生成唯一訂單號
      */
     boolean existsByOrderNumber(@Param("orderNumber") String orderNumber);
+
+    /**
+     * 冪等性兜底：用 (member_id, idempotency_key) 查回 Redis 失敗後 DB unique 攔下的訂單
+     */
+    Optional<Order> findByMemberAndIdempotencyKey(@Param("memberId") Long memberId,
+                                                  @Param("idempotencyKey") String idempotencyKey);
 }

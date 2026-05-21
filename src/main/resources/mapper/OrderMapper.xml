@@ -28,6 +28,7 @@
         <result property="discountType" column="discount_type" />
         <result property="discountValue" column="discount_value" />
         <result property="notes" column="notes" />
+        <result property="idempotencyKey" column="idempotency_key" />
         <result property="createdAt" column="created_at" />
         <result property="updatedAt" column="updated_at" />
         <result property="deletedAt" column="deleted_at" />
@@ -40,7 +41,7 @@
         recipient_name, recipient_phone, recipient_email,
         delivery_method, city, town, address, store_name, store_address,
         coupon_id, discount_type, discount_value,
-        notes, created_at, updated_at, deleted_at
+        notes, idempotency_key, created_at, updated_at, deleted_at
     </sql>
 
     <!-- 根據ID查詢訂單 -->
@@ -84,7 +85,7 @@
             recipient_name, recipient_phone, recipient_email,
             delivery_method, city, town, address, store_name, store_address,
             coupon_id, discount_type, discount_value,
-            notes, created_at, updated_at
+            notes, idempotency_key, created_at, updated_at
         ) VALUES (
             #{memberId}, #{orderNumber}, #{statusId}, #{paymentId},
             #{totalAmount}, #{shippingAmount}, #{taxAmount}, #{discountAmount},
@@ -92,7 +93,7 @@
             #{recipientName}, #{recipientPhone}, #{recipientEmail},
             #{deliveryMethod}, #{city}, #{town}, #{address}, #{storeName}, #{storeAddress},
             #{couponId}, #{discountType}, #{discountValue},
-            #{notes}, NOW(), NOW()
+            #{notes}, #{idempotencyKey}, NOW(), NOW()
         )
     </insert>
 
@@ -170,6 +171,14 @@
     <!-- 檢查訂單號是否存在 -->
     <select id="existsByOrderNumber" resultType="boolean">
         SELECT COUNT(*) > 0 FROM orders WHERE order_number = #{orderNumber}
+    </select>
+
+    <!-- 冪等性兜底：Redis 失效時用 DB unique constraint 查回既有訂單 -->
+    <select id="findByMemberAndIdempotencyKey" resultMap="OrderResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM orders
+        WHERE member_id = #{memberId}
+          AND idempotency_key = #{idempotencyKey}
     </select>
 
 </mapper>

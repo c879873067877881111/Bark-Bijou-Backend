@@ -218,6 +218,9 @@ CREATE TABLE orders (
   discount_type VARCHAR(20),
   discount_value DECIMAL(10,2),
   notes TEXT,
+  -- 冪等鍵：用戶端帶來的 UUID（無冪等需求時可為 NULL）。
+  -- 配 partial unique index 兜底 Redis 失效時的重複下單。
+  idempotency_key VARCHAR(64),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL
@@ -433,6 +436,11 @@ CREATE INDEX idx_product_sku ON product(sku);
 CREATE INDEX idx_cart_member ON cart_items(member_id);
 CREATE INDEX idx_order_member ON orders(member_id);
 CREATE INDEX idx_order_status ON orders(status_id);
+-- 冪等性兜底：同一 member + 同一 idempotency_key 永遠只能存在一筆訂單。
+-- 用 partial index 排除無冪等需求的舊資料 / null key，避免誤撞 unique。
+CREATE UNIQUE INDEX idx_orders_member_idempotency_key
+    ON orders(member_id, idempotency_key)
+    WHERE idempotency_key IS NOT NULL;
 CREATE INDEX idx_article_valid ON article(valid);
 CREATE INDEX idx_sitters_member ON sitters(member_id);
 CREATE INDEX idx_sitter_reviews_sitter ON sitter_reviews(sitter_id);

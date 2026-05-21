@@ -6,25 +6,18 @@ import com.smallnine.apiserver.dao.OrderDao;
 import com.smallnine.apiserver.dao.OrderItemDao;
 import com.smallnine.apiserver.dao.ProductDao;
 import com.smallnine.apiserver.dto.CreateOrderRequest;
-import com.smallnine.apiserver.entity.CartItem;
 import com.smallnine.apiserver.entity.Order;
 import com.smallnine.apiserver.entity.OrderItem;
-import com.smallnine.apiserver.entity.Product;
 import com.smallnine.apiserver.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.smallnine.apiserver.service.CartService;
+import com.smallnine.apiserver.service.OrderCreationService;
 import com.smallnine.apiserver.service.OrderService;
-import com.smallnine.apiserver.service.ProductService;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.security.SecureRandom;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -36,11 +29,9 @@ public class OrderServiceImpl implements OrderService {
     private final OrderDao orderDao;
     private final OrderItemDao orderItemDao;
     private final ProductDao productDao;
-    private final CartService cartService;
-    private final ProductService productService;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ObjectProvider<OrderService> selfProvider;
-    
+    private final OrderCreationService orderCreationService;
+
     /**
      * 根據ID查詢訂單（內部使用，無授權檢查）
      */
@@ -96,24 +87,24 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(ResponseCode.FORBIDDEN, "無權限操作此訂單");
         }
     }
-    
+
     /**
-     * 從購物車創建訂單
+     * 從購物車創建訂單（無冪等鍵）
      */
-    @Transactional
+    @Override
     public Order createOrderFromCart(Long memberId, CreateOrderRequest request) {
-        return doCreateOrderFromCart(memberId, request);
+        return orderCreationService.create(memberId, request, null);
     }
 
     @Override
     public Order createOrderFromCart(Long memberId, CreateOrderRequest request, String idempotencyKey) {
         if (idempotencyKey == null) {
-            return selfProvider.getObject().createOrderFromCart(memberId, request);
+            return orderCreationService.create(memberId, request, null);
         }
 
         String redisKey = "order:idempotency:" + memberId + ":" + idempotencyKey;
 
-        // SETNX 原子佔位，防止並行請求同時通過
+        // SETNX 原子佔位，防止並行請求同時通過（Redis 快路徑）
         Boolean acquired = redisTemplate.opsForValue()
                 .setIfAbsent(redisKey, "PENDING", 24, TimeUnit.HOURS);
 
@@ -129,11 +120,17 @@ public class OrderServiceImpl implements OrderService {
 
         Order order;
         try {
-            // 透過 self-proxy 呼叫，讓 @Transactional 切面真正啟動獨立交易
+            // 透過獨立 bean 呼叫，讓 @Transactional 切面真正啟動獨立交易
             // DB commit 完成後才會回到這裡，避免 Redis 寫了 orderId 但 DB rollback
-            order = selfProvider.getObject().createOrderFromCart(memberId, request);
+            order = orderCreationService.create(memberId, request, idempotencyKey);
+        } catch (DuplicateKeyException dup) {
+            // DB unique constraint 兜底：Redis 失效時 retry 撞到 (member_id, idempotency_key) unique。
+            // 表示同鍵的訂單已被先前一次 commit 寫入；查回那筆給呼叫者，整筆交易已 rollback、不會多扣庫存。
+            log.warn("idempotency=db_unique_fallback key={} memberId={}", redisKey, memberId);
+            order = orderDao.findByMemberAndIdempotencyKey(memberId, idempotencyKey)
+                    .orElseThrow(() -> new BusinessException(ResponseCode.ORDER_NOT_FOUND));
         } catch (Exception e) {
-            // Redis 清除若失敗，記 warn 但保留原始業務例外（不被 cleanup 例外蓋掉）
+            // 其他例外：Redis 清除若失敗，記 warn 但保留原始業務例外（不被 cleanup 例外蓋掉）
             try {
                 redisTemplate.delete(redisKey);
             } catch (Exception cleanup) {
@@ -144,10 +141,7 @@ public class OrderServiceImpl implements OrderService {
 
         // DB 已 commit，訂單建立成功；Redis 收尾是 best-effort。
         // PENDING→orderId 寫入失敗時嘗試 delete(key) 自癒：留著 PENDING 會讓
-        // 24h 內 retry 永遠 CONFLICT，TTL 過後又重複下單。
-        // 限制：只有「set 失敗但 delete 成功」的暫態情況才真的自癒；Redis 全不可用
-        // 時 delete 也會失敗，key 仍殘留 PENDING，靠 24h TTL 兜底（根治需 Lua/outbox，
-        // 非本次 scope）。finalize_failed 直接關聯重複下單，記 error 供告警/對帳追源。
+        // 24h 內 retry 永遠 CONFLICT。TTL 過後 retry 也不會重複下單——DB unique constraint 會擋下。
         try {
             redisTemplate.opsForValue().set(redisKey, order.getId().toString(), 24, TimeUnit.HOURS);
         } catch (Exception finalizeEx) {
@@ -162,82 +156,6 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
-    private Order doCreateOrderFromCart(Long memberId, CreateOrderRequest request) {
-        log.info("從購物車創建訂單: memberId={}", memberId);
-
-        // 1. 獲取購物車項目
-        List<CartItem> cartItems = cartService.getCartItems(memberId);
-        if (cartItems.isEmpty()) {
-            throw new BusinessException(ResponseCode.CART_EMPTY, "購物車為空，無法創建訂單");
-        }
-
-        // 2. 驗證庫存
-        if (!cartService.validateCartStock(memberId)) {
-            throw new BusinessException(ResponseCode.INSUFFICIENT_STOCK, "購物車中有商品庫存不足");
-        }
-
-        // 3. 計算訂單金額
-        BigDecimal totalAmount = cartService.calculateCartTotal(memberId);
-
-        // 4. 先扣減所有庫存（原子 SQL，如果任何步驟失敗整個 @Transactional 會 rollback）
-        for (CartItem cartItem : cartItems) {
-            boolean stockDecreased = productService.decreaseStock(cartItem.getProductId(), cartItem.getQuantity());
-            if (!stockDecreased) {
-                throw new BusinessException(ResponseCode.INSUFFICIENT_STOCK,
-                    "商品庫存不足，訂單創建失敗: productId=" + cartItem.getProductId());
-            }
-        }
-
-        // 5. 創建訂單
-        Order order = new Order();
-        order.setMemberId(memberId);
-        order.setOrderNumber(generateOrderNumber());
-        order.setStatusId(OrderStatus.PENDING.getId());
-        order.setTotalAmount(totalAmount);
-        order.setShippingAmount(BigDecimal.ZERO);
-        order.setTaxAmount(BigDecimal.ZERO);
-        order.setDiscountAmount(BigDecimal.ZERO);
-        order.setShippingAddress(request.getShippingAddress());
-        order.setRecipientName(request.getRecipientName());
-        order.setRecipientPhone(request.getRecipientPhone());
-        order.setRecipientEmail(request.getRecipientEmail());
-        order.setDeliveryMethod(request.getDeliveryMethod());
-        order.setCity(request.getCity());
-        order.setTown(request.getTown());
-        order.setAddress(request.getAddress());
-        order.setStoreName(request.getStoreName());
-        order.setStoreAddress(request.getStoreAddress());
-        order.setCouponId(request.getCouponId());
-        order.setNotes(request.getNotes());
-
-        orderDao.insert(order);
-        log.info("訂單創建成功: orderId={}, orderNumber={}", order.getId(), order.getOrderNumber());
-
-        // 6. 創建訂單項目
-        List<OrderItem> orderItems = new ArrayList<>();
-        for (CartItem cartItem : cartItems) {
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrderId(order.getId());
-            orderItem.setProductId(cartItem.getProductId());
-            orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setUnitPrice(cartItem.getUnitPrice());
-            orderItem.setTotalPrice(cartItem.getUnitPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-            orderItem.setCreatedAt(LocalDateTime.now());
-            orderItems.add(orderItem);
-        }
-
-        if (!orderItems.isEmpty()) {
-            orderItemDao.insertBatch(orderItems);
-            log.info("訂單項目創建成功: 數量={}", orderItems.size());
-        }
-
-        // 7. 清空購物車
-        cartService.clearCart(memberId);
-
-        log.info("訂單創建完成: orderId={}, totalAmount={}", order.getId(), totalAmount);
-        return order;
-    }
-
     /**
      * 更新訂單狀態
      */
@@ -246,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
         log.info("更新訂單狀態: orderId={}, statusId={}", orderId, statusId);
 
         Order order = findByIdInternal(orderId);
-        
+
         if (order.getStatusId().equals(statusId)) {
             throw new BusinessException(ResponseCode.ORDER_STATUS_ERROR, "訂單狀態未發生變化");
         }
@@ -269,11 +187,11 @@ public class OrderServiceImpl implements OrderService {
         if (updatedRows == 0) {
             throw new BusinessException(ResponseCode.ORDER_NOT_FOUND);
         }
-        
-        log.info("訂單狀態更新成功: orderId={}, oldStatus={}, newStatus={}", 
+
+        log.info("訂單狀態更新成功: orderId={}, oldStatus={}, newStatus={}",
                  orderId, order.getStatusId(), statusId);
     }
-    
+
     /**
      * 取消訂單
      */
@@ -302,7 +220,7 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("訂單取消成功: orderId={}", orderId);
     }
-    
+
     /**
      * 刪除訂單（帶授權檢查）
      */
@@ -354,29 +272,5 @@ public class OrderServiceImpl implements OrderService {
      */
     public long countUserOrders(Long memberId) {
         return orderDao.countByMemberId(memberId);
-    }
-    
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    private static final String ORDER_NUMBER_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-    /**
-     * 生成唯一訂單號（不可預測）
-     */
-    private String generateOrderNumber() {
-        String prefix = "ORD";
-
-        for (int attempt = 0; attempt < 10; attempt++) {
-            StringBuilder sb = new StringBuilder(prefix);
-            for (int i = 0; i < 12; i++) {
-                int index = SECURE_RANDOM.nextInt(ORDER_NUMBER_CHARS.length());
-                sb.append(ORDER_NUMBER_CHARS.charAt(index));
-            }
-            String orderNumber = sb.toString();
-            if (!orderDao.existsByOrderNumber(orderNumber)) {
-                return orderNumber;
-            }
-        }
-
-        throw new BusinessException(ResponseCode.INTERNAL_SERVER_ERROR, "無法生成唯一訂單號");
     }
 }
