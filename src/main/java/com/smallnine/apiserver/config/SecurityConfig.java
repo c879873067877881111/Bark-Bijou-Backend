@@ -114,7 +114,6 @@ public class SecurityConfig {
 
                 // 健康檢查
                 .requestMatchers("/api/health").permitAll()
-                .requestMatchers("/api/log-test/**").permitAll()
 
                 // 其餘一律要 JWT
                 .anyRequest().authenticated()
