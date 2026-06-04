@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -47,16 +48,13 @@ public class OrderCreationServiceImpl implements OrderCreationService {
             throw new BusinessException(ResponseCode.CART_EMPTY, "購物車為空，無法創建訂單");
         }
 
-        // 2. 驗證庫存
-        if (!cartService.validateCartStock(memberId)) {
-            throw new BusinessException(ResponseCode.INSUFFICIENT_STOCK, "購物車中有商品庫存不足");
-        }
-
-        // 3. 計算訂單金額
+        // 2. 計算訂單金額
         BigDecimal totalAmount = cartService.calculateCartTotal(memberId);
 
-        // 4. 先扣減所有庫存（原子 SQL，如果任何步驟失敗整個 @Transactional 會 rollback）
-        for (CartItem cartItem : cartItems) {
+        // 3. 扣減所有庫存（conditional UPDATE 本身就是庫存防線；按 productId 排序避免跨訂單交叉鎖死）
+        List<CartItem> stockOrder = new ArrayList<>(cartItems);
+        stockOrder.sort(Comparator.comparing(CartItem::getProductId));
+        for (CartItem cartItem : stockOrder) {
             boolean stockDecreased = productService.decreaseStock(cartItem.getProductId(), cartItem.getQuantity());
             if (!stockDecreased) {
                 throw new BusinessException(ResponseCode.INSUFFICIENT_STOCK,
@@ -64,7 +62,7 @@ public class OrderCreationServiceImpl implements OrderCreationService {
             }
         }
 
-        // 5. 創建訂單
+        // 4. 創建訂單
         Order order = new Order();
         order.setMemberId(memberId);
         order.setOrderNumber(generateOrderNumber());
@@ -91,7 +89,7 @@ public class OrderCreationServiceImpl implements OrderCreationService {
         orderDao.insert(order);
         log.info("訂單創建成功: orderId={}, orderNumber={}", order.getId(), order.getOrderNumber());
 
-        // 6. 創建訂單項目
+        // 5. 創建訂單項目
         List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cartItems) {
             OrderItem orderItem = new OrderItem();
@@ -109,7 +107,7 @@ public class OrderCreationServiceImpl implements OrderCreationService {
             log.info("訂單項目創建成功: 數量={}", orderItems.size());
         }
 
-        // 7. 清空購物車
+        // 6. 清空購物車
         cartService.clearCart(memberId);
 
         log.info("訂單創建完成: orderId={}, totalAmount={}", order.getId(), totalAmount);
