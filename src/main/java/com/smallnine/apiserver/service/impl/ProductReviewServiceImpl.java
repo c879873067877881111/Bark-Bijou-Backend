@@ -1,6 +1,7 @@
 package com.smallnine.apiserver.service.impl;
 
 import com.smallnine.apiserver.constants.enums.ResponseCode;
+import com.smallnine.apiserver.dao.OrderItemDao;
 import com.smallnine.apiserver.dao.ProductReviewDao;
 import com.smallnine.apiserver.entity.Review;
 import com.smallnine.apiserver.exception.BusinessException;
@@ -16,6 +17,7 @@ import java.util.List;
 public class ProductReviewServiceImpl implements ProductReviewService {
 
     private final ProductReviewDao productReviewDao;
+    private final OrderItemDao orderItemDao;
 
     @Override
     public List<Review> getByProductId(Long productId) {
@@ -25,6 +27,14 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     @Override
     @Transactional
     public Review add(Review review) {
+        // 需購買：該會員對此商品須有有效購買紀錄才可評價
+        if (!orderItemDao.existsByMemberIdAndProductId(review.getMemberId(), review.getProductId())) {
+            throw new BusinessException(ResponseCode.REVIEW_NOT_PURCHASED);
+        }
+        // 去重：同一會員對同一商品只能評價一次
+        if (productReviewDao.existsByMemberIdAndProductId(review.getMemberId(), review.getProductId())) {
+            throw new BusinessException(ResponseCode.REVIEW_ALREADY_EXISTS);
+        }
         productReviewDao.insert(review);
         return review;
     }

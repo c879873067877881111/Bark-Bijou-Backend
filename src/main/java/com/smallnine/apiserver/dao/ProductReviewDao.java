@@ -14,6 +14,8 @@ public interface ProductReviewDao {
 
     Optional<Review> findById(@Param("id") Long id);
 
+    boolean existsByMemberIdAndProductId(@Param("memberId") Long memberId, @Param("productId") Long productId);
+
     int insert(Review review);
 
     int update(Review review);
