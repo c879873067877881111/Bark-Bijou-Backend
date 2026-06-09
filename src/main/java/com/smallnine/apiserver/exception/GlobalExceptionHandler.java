@@ -5,6 +5,7 @@ import com.smallnine.apiserver.dto.ApiResponse;
 import com.smallnine.apiserver.logging.AuditLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -173,7 +174,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {
 
-        log.error("運行時異常: {}, 請求: {}", ex.getMessage(), request.getDescription(false), ex);
+        // DataAccessException(含 SQLException 包裝)的 message 常含表名、欄位、被擋的值,
+        // 例如 "Key (email)=(foo@bar.com) already exists",直接印進 log 字串會被 ELK 索引而洩漏。
+        // 因此只記類別名稱與 stack trace(throwable 物件交給 logger),訊息字串不放 ex.getMessage()。
+        if (ex instanceof DataAccessException) {
+            log.error("資料存取異常: {}, 請求: {}", ex.getClass().getName(), request.getDescription(false), ex);
+        } else {
+            log.error("運行時異常: {}, 請求: {}", ex.getMessage(), request.getDescription(false), ex);
+        }
 
         ApiResponse<Void> response = ApiResponse.error(
                 ResponseCode.INTERNAL_SERVER_ERROR.getCode(),
