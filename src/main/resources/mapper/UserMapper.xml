@@ -19,8 +19,8 @@
         <result property="emailValidated" column="email_validated" />
         <result property="googleUid" column="google_uid" />
         <result property="imageUpdatedAt" column="image_updated_at" />
-        <result property="resetToken" column="reset_token" />
-        <result property="resetTokenExpiry" column="reset_token_expiry" />
+        <result property="emailVerificationToken" column="email_verification_token" />
+        <result property="emailVerificationTokenExpiry" column="email_verification_token_expiry" />
         <result property="resetTokenSecret" column="reset_token_secret" />
         <result property="googleName" column="google_name" />
         <result property="city" column="city" />
@@ -33,7 +33,7 @@
         id, role, username, email, password, realname, phone, gender,
         birth_date, vip_levels_id, image_url, email_validated,
         google_uid, google_name, city, address, zip,
-        reset_token, reset_token_expiry, reset_token_secret,
+        email_verification_token, email_verification_token_expiry, reset_token_secret,
         image_updated_at, created_at, updated_at
     </sql>
 
@@ -85,13 +85,13 @@
             role, username, email, password, realname, phone, gender,
             vip_levels_id, image_url, email_validated,
             google_uid, google_name,
-            reset_token, reset_token_expiry,
+            email_verification_token, email_verification_token_expiry,
             created_at, updated_at
         ) VALUES (
             #{role}, #{username}, #{email}, #{password}, #{realname}, #{phone}, #{gender},
             #{vipLevelsId}, #{imageUrl}, #{emailValidated},
             #{googleUid}, #{googleName},
-            #{resetToken}, #{resetTokenExpiry},
+            #{emailVerificationToken}, #{emailVerificationTokenExpiry},
             NOW(), NOW()
         )
     </insert>
@@ -109,8 +109,8 @@
             email_validated = #{emailValidated},
             google_uid = #{googleUid},
             google_name = #{googleName},
-            reset_token = #{resetToken},
-            reset_token_expiry = #{resetTokenExpiry},
+            email_verification_token = #{emailVerificationToken},
+            email_verification_token_expiry = #{emailVerificationTokenExpiry},
             updated_at = NOW()
         WHERE id = #{id}
     </update>
@@ -149,11 +149,11 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 根據重置令牌查詢用戶 -->
-    <select id="findByResetToken" resultMap="UserResultMap">
+    <!-- 根據郵件驗證令牌查詢用戶 -->
+    <select id="findByEmailVerificationToken" resultMap="UserResultMap">
         SELECT <include refid="BaseColumns" />
         FROM member
-        WHERE reset_token = #{resetToken}
+        WHERE email_verification_token = #{emailVerificationToken}
     </select>
 
     <!-- 更新會員資料 -->

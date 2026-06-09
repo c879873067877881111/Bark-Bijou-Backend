@@ -27,8 +27,8 @@ public class User {
     private Boolean emailValidated = false;
     private String googleUid;
     private LocalDateTime imageUpdatedAt;
-    private String resetToken;
-    private LocalDateTime resetTokenExpiry;
+    private String emailVerificationToken;
+    private LocalDateTime emailVerificationTokenExpiry;
     private String resetTokenSecret;
     private String googleName;
     private String city;

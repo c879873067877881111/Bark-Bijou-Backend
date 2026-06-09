@@ -87,8 +87,8 @@ CREATE TABLE member (
   email_validated BOOLEAN NOT NULL DEFAULT FALSE,
   google_uid VARCHAR(255),
   image_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  reset_token VARCHAR(255),
-  reset_token_expiry TIMESTAMP,
+  email_verification_token VARCHAR(255),
+  email_verification_token_expiry TIMESTAMP,
   reset_token_secret VARCHAR(255),
   google_name VARCHAR(255),
   city VARCHAR(50),
@@ -460,9 +460,9 @@ CREATE UNIQUE INDEX uniq_member_google_uid
     ON member (google_uid)
     WHERE google_uid IS NOT NULL;
 
--- reset_token 一般索引:findByResetToken 用,大多時候為 NULL,partial 省空間。
-CREATE INDEX idx_member_reset_token
-    ON member (reset_token)
-    WHERE reset_token IS NOT NULL;
+-- email_verification_token 一般索引:findByEmailVerificationToken 用,大多時候為 NULL,partial 省空間。
+CREATE INDEX idx_member_email_verification_token
+    ON member (email_verification_token)
+    WHERE email_verification_token IS NOT NULL;
 
 COMMIT;

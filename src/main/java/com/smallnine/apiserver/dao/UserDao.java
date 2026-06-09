@@ -76,9 +76,9 @@ public interface UserDao {
     int validateEmail(@Param("id") Long id);
 
     /**
-     * 根據重置令牌查詢用戶
+     * 根據郵件驗證令牌查詢用戶
      */
-    Optional<User> findByResetToken(@Param("resetToken") String resetToken);
+    Optional<User> findByEmailVerificationToken(@Param("emailVerificationToken") String emailVerificationToken);
 
     /**
      * 更新會員資料

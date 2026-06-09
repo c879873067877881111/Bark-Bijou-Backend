@@ -70,8 +70,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 生成郵件驗證令牌
         String verificationToken = generateSecureToken();
-        user.setResetToken(verificationToken);
-        user.setResetTokenExpiry(LocalDateTime.now().plusHours(24));
+        user.setEmailVerificationToken(verificationToken);
+        user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
 
         userDao.insert(user);
         log.info("action=register username={} user_id={} result=success",
@@ -175,20 +175,20 @@ public class AuthServiceImpl implements AuthService {
     public void verifyEmail(String token) {
         log.info("action=verify_email token={} result=attempt", token.substring(0, Math.min(8, token.length())) + "...");
 
-        User user = userDao.findByResetToken(token)
+        User user = userDao.findByEmailVerificationToken(token)
                 .orElseThrow(() -> {
                     log.warn("action=verify_email result=failed reason=invalid_token");
                     return new ResourceNotFoundException("驗證令牌無效或已過期");
                 });
 
-        if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getEmailVerificationTokenExpiry() == null || user.getEmailVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
             log.warn("action=verify_email user_id={} result=failed reason=token_expired", user.getId());
             throw new ResourceNotFoundException("驗證令牌已過期，請重新註冊");
         }
 
         user.setEmailValidated(true);
-        user.setResetToken(null);
-        user.setResetTokenExpiry(null);
+        user.setEmailVerificationToken(null);
+        user.setEmailVerificationTokenExpiry(null);
         userDao.update(user);
 
         log.info("action=verify_email user_id={} username={} result=success", user.getId(), user.getUsername());
@@ -215,8 +215,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String verificationToken = generateSecureToken();
-        user.setResetToken(verificationToken);
-        user.setResetTokenExpiry(LocalDateTime.now().plusHours(24));
+        user.setEmailVerificationToken(verificationToken);
+        user.setEmailVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
         userDao.update(user);
 
         mailService.sendVerificationEmail(user.getEmail(), verificationToken);
