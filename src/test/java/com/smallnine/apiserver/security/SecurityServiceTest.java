@@ -21,7 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * #M2：把 ArticleController @PreAuthorize 內嵌的 DB 查詢抽到 SecurityService。
+ * 把 ArticleController @PreAuthorize 內嵌的 DB 查詢抽到 SecurityService。
  * 涵蓋 ADMIN、作者本人、非作者、未登入、主體非 UserPrincipal、文章不存在六種情形。
  */
 @ExtendWith(MockitoExtension.class)

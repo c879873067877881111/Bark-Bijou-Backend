@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 /**
- * #NEW-B：OAuth code 兌換也要擋停用帳號（與 #NEW-A 同理）。
+ * OAuth code 兌換也要擋停用帳號。
  */
 @ExtendWith(MockitoExtension.class)
 class OAuth2ExchangeServiceTest {

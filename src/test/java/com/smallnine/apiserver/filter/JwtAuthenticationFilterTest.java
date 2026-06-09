@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * #M3：filter 拿掉 isAccessToken 守衛後的契約。
+ * filter 拿掉 isAccessToken 守衛後的契約。
  * refresh token 已是 UUID（非 JWT），那道 type 檢查是 dead defense；
  * 本測試鎖住「合法 token 仍正常認證、驗證失敗不認證、無 Bearer 不認證」。
  */

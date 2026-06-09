@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M1 批次2：Order(createOrder/cancelOrder) + Payment(create-order) 寫入端點授權紀律。
+ * 批次2：Order(createOrder/cancelOrder) + Payment(create-order) 寫入端點授權紀律。
  *
  * 這三個端點在現行 SecurityConfig `.anyRequest().authenticated()` 下匿名本就 401，
  * 補 @PreAuthorize("isAuthenticated()") 是把隱含授權變顯式 + defense-in-depth：
@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *   - 匿名 → 401（契約：寫入必須認證）
  *   - 已認證 USER → 非 401/403（沒被過度限制，例如沒誤寫成 hasRole('ADMIN')）
  *
- * ecpay /callback 是金流閘道 webhook，刻意不掛 @PreAuthorize（見 REVIEW_TODO #M11）。
+ * ecpay /callback 是金流閘道 webhook，刻意不掛 @PreAuthorize。
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -63,7 +63,7 @@ class OrderPaymentAuthzTest extends AbstractIntegrationTest {
 
     // ── 沒被過度限制：已認證 USER 通過授權層，落到下游業務（精確下游碼，非 401/403）──
     // 註：跨租戶 ownership（USER A 取消 USER B 訂單 → 403）由 OrderServiceTest.cancelOrder_notOwner
-    // 覆蓋；本檔只驗 #M1 的 authz 註解契約，不重複測 ownership 行為。
+    // 覆蓋；本檔只驗 authz 註解契約，不重複測 ownership 行為。
 
     @Test
     void createOrder_asUser_passesAuthzThenValidation400() throws Exception {

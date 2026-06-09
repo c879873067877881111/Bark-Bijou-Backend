@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * #H1 防帳號枚舉：resendVerificationEmail 對「信箱不存在 / 已驗證」
+ * 防帳號枚舉：resendVerificationEmail 對「信箱不存在 / 已驗證」
  * 必須靜默結束，不得拋例外、不得寄信，避免回應洩漏信箱是否註冊。
  */
 @ExtendWith(MockitoExtension.class)

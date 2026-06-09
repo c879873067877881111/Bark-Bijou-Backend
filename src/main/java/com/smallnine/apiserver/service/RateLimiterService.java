@@ -1,7 +1,7 @@
 package com.smallnine.apiserver.service;
 
 /**
- * #H1 認證端點限流（純記憶體 token bucket）。
+ * 認證端點限流（純記憶體 token bucket）。
  *
  * 僅適用單機；多機 / 分散式限流（登入端點）見 {@link AuthRateLimitService}。
  * 實作見 {@link com.smallnine.apiserver.service.impl.RateLimiterServiceImpl}。

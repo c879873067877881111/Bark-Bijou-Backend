@@ -12,14 +12,14 @@ import java.time.Duration;
 import java.util.Locale;
 
 /**
- * #H1 認證端點限流（純記憶體 token bucket）。
+ * 認證端點限流（純記憶體 token bucket）。
  *
  * bucket 存在 Caffeine 有界 cache：
  *  - key 是攻擊者可控的 email / IP，必須有上限，否則限流器本身會被塞爆記憶體
  *  - expireAfterAccess 設為各自的補滿視窗：閒置滿一個視窗的 entry 即使被淘汰，
  *    重建也是滿桶——反正它本來就已被 refill 補滿，語意安全；maximumSize 則是硬上限
  *
- * 僅適用單機；多機 / 分散式限流（登入端點）留待 #H2 改 Redis-backed。
+ * 僅適用單機；多機 / 分散式限流（登入端點）日後改為 Redis-backed。
  * 此處故意只覆蓋 resend-verification 一條路徑，不做過度設計。
  */
 @Component

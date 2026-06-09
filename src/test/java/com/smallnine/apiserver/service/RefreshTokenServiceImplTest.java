@@ -21,7 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * #C2 token rotation 行為驗證:
+ * token rotation 行為驗證:
  *  - login / register / OAuth (rotateFromToken=null) 不撤銷任何既有 token
  *  - refresh (rotateFromToken=舊顆) 只撤銷那一顆
  *  - 多裝置:A 裝置登入後 B 裝置登入,A 裝置的 token 必須留著

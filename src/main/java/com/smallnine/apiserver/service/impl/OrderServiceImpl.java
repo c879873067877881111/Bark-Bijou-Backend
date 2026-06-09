@@ -202,7 +202,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = findByIdInternal(orderId);
         validateOrderOwnership(order, memberId);
 
-        // #C3：先用 CAS 一步把狀態翻成已取消（狀態仍可取消才會更新到行）。
+        // 先用 CAS 一步把狀態翻成已取消（狀態仍可取消才會更新到行）。
         // 並發下只有唯一勝出的 thread 拿到 updated=1，敗者拿 0、直接回明確訊息，
         // 不再走「先還庫存→updateOrderStatus 撞狀態→整筆 rollback」那套浪費寫入 + 誤導訊息。
         int updated = orderDao.cancelIfCancellable(

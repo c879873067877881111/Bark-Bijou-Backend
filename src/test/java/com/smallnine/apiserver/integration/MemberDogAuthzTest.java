@@ -15,13 +15,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M1 批次4：Member(updateProfile/changePassword) + MemberDog(addDog/deleteDog) 授權紀律。
+ * 批次4：Member(updateProfile/changePassword) + MemberDog(addDog/deleteDog) 授權紀律。
  *
  * 同批次2/3：現行 SecurityConfig `.anyRequest().authenticated()` 下匿名本就 401，
  * 補 @PreAuthorize("isAuthenticated()") 是顯式化 + defense-in-depth，測試為契約守門。
  * ownership 經查證 IDOR-safe（MemberServiceImpl.changePassword 比對
  * authenticatedUserId.equals(memberId)、DogServiceImpl.deleteDog 比對
- * existing.getMemberId().equals(memberId) → FORBIDDEN），屬 #M1 非 #M2。
+ * existing.getMemberId().equals(memberId) → FORBIDDEN）。
  */
 @SpringBootTest
 @AutoConfigureMockMvc

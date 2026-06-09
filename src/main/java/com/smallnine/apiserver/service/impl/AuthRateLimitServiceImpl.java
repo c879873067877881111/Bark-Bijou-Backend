@@ -12,7 +12,7 @@ import java.time.Duration;
 import java.util.Locale;
 
 /**
- * #H2 認證端點分散式限流（Redis 計數）。
+ * 認證端點分散式限流（Redis 計數）。
  *
  * 刻意不引 bucket4j-redis：本專案既有 Redis 用法都是 RedisTemplate
  * （見 OAuth2CodeStore / OrderServiceImpl），INCR+EXPIRE 對「暴力破解

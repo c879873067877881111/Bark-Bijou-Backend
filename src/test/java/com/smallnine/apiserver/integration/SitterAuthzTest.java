@@ -16,14 +16,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M1 批次6：SitterBooking(2) + Sitter(4) 授權紀律。
+ * 批次6：SitterBooking(2) + Sitter(4) 授權紀律。
  *
  * 同批次2-5：補 @PreAuthorize("isAuthenticated()") 為顯式化 + defense-in-depth，
  * 測試為契約守門。ownership 經查證 IDOR-safe：
  * - SitterServiceImpl.updateSitter/deleteSitter 比對 sitter.getMemberId().equals(memberId) → SITTER_FORBIDDEN
  * - addDog/createSitter/createBooking 以登入者自身 id 為準（intrinsic）
  * - addReview 為任何登入者對某保母評論（非 owner，isAuthenticated 即正解）
- * 故屬 #M1 非 #M2。
  */
 @SpringBootTest
 @AutoConfigureMockMvc

@@ -16,18 +16,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M1 批次7（最後一批）：Coupon(1) + ProductReview(1) 授權紀律。
+ * 批次7（最後一批）：Coupon(1) + ProductReview(1) 授權紀律。
  *
  * 同批次2-6：補 @PreAuthorize("isAuthenticated()") 為顯式化 + defense-in-depth，
  * 測試為契約守門。C 類純認證——兩個寫入端點皆以登入者自身 id 為準（intrinsic），
- * 無 path-id 反查 ownership，故非 IDOR、屬 #M1 非 #M2：
+ * 無 path-id 反查 ownership，故非 IDOR：
  * - CouponController.claimCoupon：memberId = 登入者；service 端 COUPON_NOT_FOUND /
  *   COUPON_EXPIRED / 領完上限 / COUPON_ALREADY_CLAIMED 防護完整
  * - ProductReviewController.addReview：memberId = 登入者
  *
  * ⚠️ 查證衍生：ProductReviewServiceImpl.add 為裸 insert，無「需購買」/「去重」防護
  *    （server 不強制，僅前端 checkReview UI gate）→ 評論灌水/重複評論向量，
- *    非跨用戶 IDOR 故不影響本批 @PreAuthorize 正確性，獨立追蹤見 #M15。
+ *    非跨用戶 IDOR 故不影響本批 @PreAuthorize 正確性。
  */
 @SpringBootTest
 @AutoConfigureMockMvc

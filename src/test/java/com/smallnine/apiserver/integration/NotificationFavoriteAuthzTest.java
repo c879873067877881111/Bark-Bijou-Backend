@@ -16,13 +16,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M1 批次5：Notification(4) + ProductFavorite(1) + ArticleFavorite(2) 授權紀律。
+ * 批次5：Notification(4) + ProductFavorite(1) + ArticleFavorite(2) 授權紀律。
  *
  * 同批次2-4：補 @PreAuthorize("isAuthenticated()") 為顯式化 + defense-in-depth，
  * 測試為契約守門。ownership 經查證 IDOR-safe：
  * - NotificationServiceImpl.markAsRead/delete 比對 n.getMemberId().equals(memberId) → FORBIDDEN
  * - favorites 為 (memberId, targetId) 複合自限，操作對象恆為登入者自身
- * 故屬 #M1 非 #M2。
  */
 @SpringBootTest
 @AutoConfigureMockMvc

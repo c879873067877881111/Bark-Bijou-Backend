@@ -16,12 +16,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M1 批次3：Cart(4) + Recipient(3) 寫入端點授權紀律。
+ * 批次3：Cart(4) + Recipient(3) 寫入端點授權紀律。
  *
  * 與批次2 同：現行 SecurityConfig `.anyRequest().authenticated()` 下匿名本就 401，
  * 補 @PreAuthorize("isAuthenticated()") 是顯式化 + defense-in-depth，測試為契約守門。
  * ownership 已由 service 層把關（CartServiceImpl / RecipientServiceImpl 皆檢查
- * getMemberId().equals(memberId) → FORBIDDEN，IDOR-safe），屬 #M1 範圍非 #M2。
+ * getMemberId().equals(memberId) → FORBIDDEN，IDOR-safe）。
  * 跨租戶 ownership 行為由各 service 既有測試覆蓋，本檔只驗 authz 註解契約。
  */
 @SpringBootTest

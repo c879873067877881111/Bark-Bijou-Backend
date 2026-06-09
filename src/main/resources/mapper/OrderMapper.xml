@@ -133,7 +133,7 @@
         WHERE id = #{id}
     </update>
 
-    <!-- #C3 CAS 取消：狀態仍可取消才翻成已取消，並發下只有一個 thread 更新到 1 行 -->
+    <!-- CAS 取消：狀態仍可取消才翻成已取消，並發下只有一個 thread 更新到 1 行 -->
     <update id="cancelIfCancellable">
         UPDATE orders SET
             status_id = #{cancelledStatusId},

@@ -134,7 +134,7 @@ public class AuthServiceImpl implements AuthService {
                     User user = userDao.findById(userId)
                             .orElseThrow(() -> new ResourceNotFoundException("用戶", userId));
 
-                    // #NEW-A：refresh 一定要 reload User 並擋停用帳號。
+                    // refresh 一定要 reload User 並擋停用帳號。
                     // 否則 admin 在 DB 把 email_validated 設 false 後,該 user 靠手上的
                     // refresh token 還能無限重發 access token(最長 7 天)。
                     // 帳號既已停用,該 user 全部裝置 session 一併撤銷,不只手上這顆。
@@ -201,7 +201,7 @@ public class AuthServiceImpl implements AuthService {
     public void resendVerificationEmail(String email) {
         log.info("action=resend_verification email={} result=attempt", email);
 
-        // #H1 防帳號枚舉：不存在或已驗證一律靜默結束，由 controller 回固定訊息，
+        // 防帳號枚舉：不存在或已驗證一律靜默結束，由 controller 回固定訊息，
         // 不向呼叫端洩漏該信箱是否註冊 / 是否已驗證
         User user = userDao.findByEmail(email).orElse(null);
         if (user == null) {

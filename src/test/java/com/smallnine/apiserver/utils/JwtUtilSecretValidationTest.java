@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
- * #H3-revised：JWT secret 的驗證必須在 startup（@PostConstruct）就 fail，
+ * JWT secret 的驗證必須在 startup（@PostConstruct）就 fail，
  * 不能拖到第一次簽 token 才炸；且 getBytes 要鎖死 UTF-8，不吃 platform charset。
  */
 class JwtUtilSecretValidationTest {
