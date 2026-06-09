@@ -29,7 +29,7 @@ class JwtUtilSecretValidationTest {
         assertThatCode(() -> ReflectionTestUtils.invokeMethod(jwtUtil, "initSigningKey"))
                 .doesNotThrowAnyException();
 
-        String token = jwtUtil.generateToken("alice");
+        String token = jwtUtil.generateAccessToken("alice");
         assertThat(jwtUtil.extractUsername(token)).isEqualTo("alice");
         assertThat(jwtUtil.validateToken(token)).isTrue();
     }
@@ -61,7 +61,7 @@ class JwtUtilSecretValidationTest {
         assertThatCode(() -> ReflectionTestUtils.invokeMethod(jwtUtil, "initSigningKey"))
                 .doesNotThrowAnyException();
 
-        String token = jwtUtil.generateToken("bob");
+        String token = jwtUtil.generateAccessToken("bob");
         assertThat(jwtUtil.extractUsername(token)).isEqualTo("bob");
     }
 
