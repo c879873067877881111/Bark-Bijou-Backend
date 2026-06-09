@@ -43,7 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryDao.findActiveCategories(offset, size);
     }
 
-    @Cacheable(value = "categories", key = "'top'")
+    // 列表查詢不快取：任一筆分類異動都會讓 top/tree/parent 列表 stale，難精準失效，故不快取
     public List<CategoryResponse> findTopCategories() {
         List<Category> topCategories = categoryDao.findTopCategories();
         List<CategoryResponse> responses = new ArrayList<>();
@@ -55,7 +55,7 @@ public class CategoryServiceImpl implements CategoryService {
         return responses;
     }
 
-    @Cacheable(value = "categories", key = "'tree'")
+    // 列表查詢不快取：樹狀結果橫跨多筆分類，任一筆異動即整棵 stale，難精準失效
     public List<CategoryResponse> getCategoryTree() {
         List<Category> topCategories = categoryDao.findTopCategories();
         List<CategoryResponse> responses = new ArrayList<>();
@@ -65,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
         return responses;
     }
 
-    @Cacheable(value = "categories", key = "'parent:' + #parentId")
+    // 列表查詢不快取：同一 parentId 下子分類列表會隨子分類增減/異動 stale，難精準失效
     public List<CategoryResponse> findByParentId(Long parentId) {
         List<Category> categories = categoryDao.findByParentId(parentId);
         List<CategoryResponse> responses = new ArrayList<>();
@@ -77,7 +77,9 @@ public class CategoryServiceImpl implements CategoryService {
         return responses;
     }
 
-    @CacheEvict(value = "categories", allEntries = true)
+
+
+    // 新增不需 evict：id 為新生成，不可能有對應的舊 by-id cache；列表已不快取，故無 allEntries 需求
     @Transactional
     public Category createCategory(CategoryRequest request) {
         if (categoryDao.existsByName(request.getName())) {
@@ -106,7 +108,8 @@ public class CategoryServiceImpl implements CategoryService {
         return category;
     }
 
-    @CacheEvict(value = "categories", allEntries = true)
+    // 精準 evict：只清掉該筆 id 的 by-id cache（findById 的 'id:'），不再 allEntries；列表已不快取無 stale 之虞
+    @CacheEvict(value = "categories", key = "'id:' + #id")
     @Transactional
     public Category updateCategory(Long id, CategoryRequest request) {
         Category existingCategory = findById(id);
@@ -138,7 +141,8 @@ public class CategoryServiceImpl implements CategoryService {
         return existingCategory;
     }
 
-    @CacheEvict(value = "categories", allEntries = true)
+    // 精準 evict：刪除時清掉該筆 id 的 by-id cache，不再 allEntries
+    @CacheEvict(value = "categories", key = "'id:' + #id")
     @Transactional
     public void deleteCategory(Long id) {
         Category category = findById(id);
@@ -156,7 +160,8 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("action=DELETE_CATEGORY id={} name={}", id, category.getName());
     }
 
-    @CacheEvict(value = "categories", allEntries = true)
+    // 精準 evict：狀態更新只影響該筆，清掉其 by-id cache 即可，不再 allEntries
+    @CacheEvict(value = "categories", key = "'id:' + #id")
     @Transactional
     public void updateCategoryStatus(Long id, Boolean isActive) {
         Category category = findById(id);

@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.smallnine.apiserver.service.BrandService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +33,13 @@ public class BrandServiceImpl implements BrandService {
                 .orElseThrow(() -> new BusinessException(ResponseCode.BRAND_NOT_FOUND));
     }
 
-    @Cacheable(value = "brands", key = "'list:' + #page + ':' + #size")
+    // 列表查詢不快取：分頁列表 key 會隨 page/size 組合爆量，且新增/刪除任一筆都會讓所有分頁 stale，難以精準失效
     public List<Brand> findAll(int page, int size) {
         int offset = page * size;
         return brandDao.findAll(offset, size);
     }
 
-    @Cacheable(value = "brands", key = "'all:' + #page + ':' + #size")
+    // 列表查詢不快取：同上，避免列表 cache 爆量與寫入後讀到舊資料
     public List<BrandResponse> findAllBrands(int page, int size) {
         List<Brand> brands = findAll(page, size);
         List<BrandResponse> responses = new ArrayList<>();
@@ -63,7 +64,7 @@ public class BrandServiceImpl implements BrandService {
         return responses;
     }
 
-    @CacheEvict(value = "brands", allEntries = true)
+    // 新增不需 evict：id 為新生成，不可能有對應的舊 by-id cache；列表已不快取，故無 allEntries 需求
     @Transactional
     public Brand createBrand(BrandRequest request) {
         if (brandDao.existsByName(request.getName())) {
@@ -82,7 +83,11 @@ public class BrandServiceImpl implements BrandService {
         return brand;
     }
 
-    @CacheEvict(value = "brands", allEntries = true)
+    // 精準 evict：只清掉該筆 id 的兩個 by-id cache（findById 的 'id:' 與 getBrandResponse 的 'response:'），不再 allEntries
+    @Caching(evict = {
+            @CacheEvict(value = "brands", key = "'id:' + #id"),
+            @CacheEvict(value = "brands", key = "'response:' + #id")
+    })
     @Transactional
     public Brand updateBrand(Long id, BrandRequest request) {
         Brand existingBrand = findById(id);
@@ -102,7 +107,11 @@ public class BrandServiceImpl implements BrandService {
         return existingBrand;
     }
 
-    @CacheEvict(value = "brands", allEntries = true)
+    // 精準 evict：刪除時清掉該筆 id 的兩個 by-id cache，不再 allEntries
+    @Caching(evict = {
+            @CacheEvict(value = "brands", key = "'id:' + #id"),
+            @CacheEvict(value = "brands", key = "'response:' + #id")
+    })
     @Transactional
     public void deleteBrand(Long id) {
         Brand brand = findById(id);
