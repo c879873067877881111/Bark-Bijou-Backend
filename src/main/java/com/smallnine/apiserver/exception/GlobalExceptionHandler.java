@@ -97,14 +97,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(
             DataIntegrityViolationException ex, WebRequest request) {
 
-        log.error("數據庫約束違反: {}, 請求: {}", ex.getMessage(), request.getDescription(false));
+        log.error("資料庫約束違反: {}, 請求: {}", ex.getMessage(), request.getDescription(false));
 
-        String message = "數據操作失敗,請檢查數據完整性";
+        String message = "資料操作失敗,請檢查資料完整性";
         if (ex.getMessage() != null) {
             if (ex.getMessage().contains("unique")) {
-                message = "數據已存在,不能重複";
+                message = "資料已存在,不能重複";
             } else if (ex.getMessage().contains("foreign key")) {
-                message = "存在關聯數據,無法刪除";
+                message = "存在關聯資料,無法刪除";
             }
         }
 

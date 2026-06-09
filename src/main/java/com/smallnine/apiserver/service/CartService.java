@@ -22,8 +22,6 @@ public interface CartService {
 
     long getCartItemCount(Long memberId);
 
-    long countCartItems(Long memberId);
-
     boolean validateCartStock(Long memberId);
 
     CartValidationResult validateCart(Long memberId);

@@ -76,20 +76,10 @@ public class JwtUtil {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-        } catch (ExpiredJwtException e) {
-            log.warn("存取令牌已過期: {}", e.getMessage());
-            throw e;
-        } catch (UnsupportedJwtException e) {
-            log.warn("不支援的令牌格式: {}", e.getMessage());
-            throw e;
-        } catch (MalformedJwtException e) {
-            log.warn("令牌格式錯誤: {}", e.getMessage());
-            throw e;
-        } catch (SecurityException e) {
-            log.warn("令牌簽名驗證失敗: {}", e.getMessage());
-            throw e;
-        } catch (IllegalArgumentException e) {
-            log.warn("令牌參數無效: {}", e.getMessage());
+        } catch (JwtException | IllegalArgumentException e) {
+            // 過期／格式錯誤／簽名驗證失敗／參數無效統一在此記 log 後原樣 rethrow，
+            // 由 e.getClass().getSimpleName() 保留辨識度。
+            log.warn("令牌解析失敗({}): {}", e.getClass().getSimpleName(), e.getMessage());
             throw e;
         }
     }
@@ -98,24 +88,9 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
     
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
-    }
-    
-    public String generateToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
-    }
-    
     public String generateAccessToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("type", "access");
         return createToken(claims, username, accessTokenExpiration);
-    }
-    
-    private String createToken(Map<String, Object> claims, String subject) {
-        return createToken(claims, subject, accessTokenExpiration);
     }
     
     private String createToken(Map<String, Object> claims, String subject, Long expiration) {

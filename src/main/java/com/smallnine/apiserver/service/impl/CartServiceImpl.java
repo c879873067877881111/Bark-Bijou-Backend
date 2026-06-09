@@ -181,14 +181,7 @@ public class CartServiceImpl implements CartService {
     public long getCartItemCount(Long memberId) {
         return cartItemDao.countByMemberId(memberId);
     }
-    
-    /**
-     * 統計購物車商品數量（別名方法）
-     */
-    public long countCartItems(Long memberId) {
-        return getCartItemCount(memberId);
-    }
-    
+
     /**
      * 驗證購物車商品庫存
      */

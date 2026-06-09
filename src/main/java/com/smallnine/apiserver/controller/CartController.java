@@ -148,7 +148,7 @@ public class CartController {
     @GetMapping("/count")
     public ResponseEntity<ApiResponse<Long>> getCartItemCount(@AuthenticationPrincipal UserDetails userDetails) {
         User user = AuthUtils.getAuthenticatedUser(userDetails);
-        long count = cartService.countCartItems(user.getId());
+        long count = cartService.getCartItemCount(user.getId());
         return ResponseEntity.ok(ApiResponse.success(count));
     }
 
