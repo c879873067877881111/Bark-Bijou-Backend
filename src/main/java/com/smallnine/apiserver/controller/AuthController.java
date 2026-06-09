@@ -47,7 +47,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody RegisterRequest request,
                                                               HttpServletRequest httpRequest) {
-        // #H2 per-IP throttle：擋同 IP 大量註冊（帳號農場 / 枚舉）
+        // per-IP throttle：擋同 IP 大量註冊（帳號農場 / 枚舉）
         authRateLimitService.assertIpQuota("register", clientIpResolver.resolve(httpRequest),
                 5, Duration.ofMinutes(10));
         UserResponse user = authService.register(request);
@@ -66,7 +66,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request,
                                                            HttpServletRequest httpRequest) {
         String ip = clientIpResolver.resolve(httpRequest);
-        // #H2 前置：帳號被鎖 / 該 IP 失敗爆表，連嘗試都不給
+        // 前置：帳號被鎖 / 該 IP 失敗爆表，連嘗試都不給
         authRateLimitService.assertLoginAllowed(request.getUsernameOrEmail(), ip);
         try {
             AuthResponse authResponse = authService.login(request);
@@ -140,7 +140,7 @@ public class AuthController {
     @PostMapping("/oauth/exchange")
     public ResponseEntity<ApiResponse<AuthResponse>> exchangeOAuth2Code(@Valid @RequestBody OAuth2ExchangeRequest request,
                                                                         HttpServletRequest httpRequest) {
-        // #H2 per-IP throttle：code 一次性且 60s 失效，這裡擋暴力猜 code
+        // per-IP throttle：code 一次性且 60s 失效，這裡擋暴力猜 code
         authRateLimitService.assertIpQuota("oauth-exchange", clientIpResolver.resolve(httpRequest),
                 20, Duration.ofMinutes(5));
         AuthResponse authResponse = oAuth2ExchangeService.exchange(request.getCode());
@@ -155,11 +155,11 @@ public class AuthController {
     @PostMapping("/resend-verification")
     public ResponseEntity<ApiResponse<String>> resendVerification(@RequestParam String email,
                                                                   HttpServletRequest request) {
-        // #H1 限流：email 與 IP 任一超限即擋，避免 email 炸彈 / 整段 IP 掃信箱
+        // 限流：email 與 IP 任一超限即擋，避免 email 炸彈 / 整段 IP 掃信箱
         if (!rateLimiterService.tryResendVerification(email, clientIpResolver.resolve(request))) {
             throw new BusinessException(ResponseCode.TOO_MANY_REQUESTS);
         }
-        // #H1 防枚舉：service 對「不存在 / 已驗證」靜默處理，這裡一律回固定訊息
+        // 防枚舉：service 對「不存在 / 已驗證」靜默處理，這裡一律回固定訊息
         authService.resendVerificationEmail(email);
         return ResponseEntity.ok(ApiResponse.success("若該信箱已註冊且尚未驗證，我們已寄出驗證信"));
     }

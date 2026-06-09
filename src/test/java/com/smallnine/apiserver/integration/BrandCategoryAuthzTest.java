@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M1 批次1：Brand / Category 寫入端點授權紀律。
+ * 批次1：Brand / Category 寫入端點授權紀律。
  * 規則：所有寫入端點必須 @PreAuthorize("hasRole('ADMIN')")。
  * 涵蓋錯誤 case（USER 一律 403）與正常 case（ADMIN 建立成功）。
  */

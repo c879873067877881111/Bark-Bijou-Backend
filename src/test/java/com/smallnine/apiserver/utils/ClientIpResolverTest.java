@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * #H2：clientIp 信任邊界（取代 #35 controller 內的舊邏輯）。
+ * clientIp 信任邊界（取代 #35 controller 內的舊邏輯）。
  * 重點錯誤路徑：偽造 X-Forwarded-For 不能繞過 per-IP 限流。
  */
 class ClientIpResolverTest {

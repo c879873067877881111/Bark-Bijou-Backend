@@ -3,7 +3,7 @@ package com.smallnine.apiserver.service;
 import java.time.Duration;
 
 /**
- * #H2 認證端點分散式限流（Redis 計數）。
+ * 認證端點分散式限流（Redis 計數）。
  *
  * 提供登入失敗保護（帳號/IP 計數與鎖定）與一般 per-IP 固定視窗 throttle。
  * 實作見 {@link com.smallnine.apiserver.service.impl.AuthRateLimitServiceImpl}。

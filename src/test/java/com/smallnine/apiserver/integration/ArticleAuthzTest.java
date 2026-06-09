@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * #M2：文章更新／刪除授權改走 @securityService.canEditArticle（取代 SpEL 內嵌 DB 查詢）。
+ * 文章更新／刪除授權改走 @securityService.canEditArticle（取代 SpEL 內嵌 DB 查詢）。
  * 真實 wiring 驗證 SpEL bean 接得上，並回歸保證：修掉舊 authentication.principal.id 後，
  * 文章作者本人現在真的能改自己的文章（舊寫法對非 ADMIN 求值即丟例外）。
  */

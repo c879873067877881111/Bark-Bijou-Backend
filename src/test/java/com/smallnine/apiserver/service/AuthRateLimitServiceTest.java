@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * #H2 分散式限流。涵蓋正常 + 錯誤路徑：
+ * 分散式限流。涵蓋正常 + 錯誤路徑：
  *  - 帳號達門檻鎖定 / 未達門檻不鎖
  *  - 鎖定 / IP 鎖定時前置檢查擋下
  *  - 登入成功清計數

@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * #NEW-A：refresh 流程必須 reload User 並擋停用帳號。
+ * refresh 流程必須 reload User 並擋停用帳號。
  * admin 在 DB 把 email_validated 設 false 後，該 user 不能再靠手上的
  * refresh token 換新 access token，且全部裝置 session 一併撤銷。
  */

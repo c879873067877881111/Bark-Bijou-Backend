@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * #H1 限流行為：
+ * 限流行為：
  *  - 每個 email 5 分鐘只准 1 次
  *  - 每個 IP 每分鐘最多 5 次
  */

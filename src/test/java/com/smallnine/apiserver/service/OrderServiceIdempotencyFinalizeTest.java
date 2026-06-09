@@ -27,7 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * #C4-revised：DB 訂單已 commit 後，冪等鍵 PENDING→orderId 的最終寫入若失敗，
+ * DB 訂單已 commit 後，冪等鍵 PENDING→orderId 的最終寫入若失敗，
  * 不可把 key 留在 PENDING（否則 24h 內 retry 永遠 CONFLICT、TTL 過後又重複下單）。
  *
  * 純單元測試：直接 mock OrderServiceImpl 的依賴，OrderCreationService 回傳已建好的訂單，

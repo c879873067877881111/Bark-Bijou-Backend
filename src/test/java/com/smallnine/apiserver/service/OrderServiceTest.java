@@ -162,7 +162,7 @@ class OrderServiceTest {
         assertEquals(ResponseCode.FORBIDDEN.getCode(), ex.getCode());
     }
 
-    // ── #C3 CAS 取消：併發競態收斂 ──
+    // ── CAS 取消：併發競態收斂 ──
 
     @Test
     void cancelOrder_alreadyCancelled_noDoubleStockRestore() {
