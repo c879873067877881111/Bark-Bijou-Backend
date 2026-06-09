@@ -114,12 +114,6 @@ public class JwtUtil {
         return createToken(claims, username, accessTokenExpiration);
     }
     
-    public String generateRefreshToken(String username) {
-        Map<String, Object> claims = new HashMap<>(); 
-        claims.put("type", "refresh");
-        return createToken(claims, username, refreshTokenExpiration);
-    }
-    
     private String createToken(Map<String, Object> claims, String subject) {
         return createToken(claims, subject, accessTokenExpiration);
     }
@@ -132,18 +126,6 @@ public class JwtUtil {
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
-    }
-    
-    public String extractTokenType(String token) {
-        return extractClaim(token, claims -> (String) claims.get("type"));
-    }
-    
-    public boolean isRefreshToken(String token) {
-        return "refresh".equals(extractTokenType(token));
-    }
-    
-    public boolean isAccessToken(String token) {
-        return "access".equals(extractTokenType(token));
     }
     
     public Boolean validateToken(String token, UserDetails userDetails) {
