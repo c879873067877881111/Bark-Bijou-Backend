@@ -26,6 +26,14 @@
         SELECT * FROM product_reviews WHERE id = #{id}
     </select>
 
+    <!-- 檢查會員是否已對指定商品評價過（去重用） -->
+    <select id="existsByMemberIdAndProductId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM product_reviews
+        WHERE member_id = #{memberId}
+          AND product_id = #{productId}
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO product_reviews (product_id, member_id, rating, content, is_verified_purchase, created_at, updated_at)
         VALUES (#{productId}, #{memberId}, #{rating}, #{content}, #{isVerifiedPurchase}, NOW(), NOW())

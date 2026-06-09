@@ -82,6 +82,7 @@ public enum ResponseCode {
     REVIEW_NOT_FOUND(8003, "評價不存在", HttpStatus.NOT_FOUND),
     REVIEW_ALREADY_EXISTS(8004, "已評價過", HttpStatus.CONFLICT),
     REVIEW_NO_BOOKING(8005, "尚未預約無法評價", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_PURCHASED(8006, "尚未購買此商品無法評價", HttpStatus.BAD_REQUEST),
 
     // 業務例外 - 收件人相關
     RECIPIENT_NOT_FOUND(8101, "收件人不存在", HttpStatus.NOT_FOUND),
