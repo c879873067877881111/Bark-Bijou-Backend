@@ -33,8 +33,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthRateLimitServiceTest {
 
-    @Mock private RedisTemplate<String, Object> redisTemplate;
-    @Mock private ValueOperations<String, Object> valueOps;
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private ValueOperations<String, Object> valueOps;
 
     private AuthRateLimitService svc;
 

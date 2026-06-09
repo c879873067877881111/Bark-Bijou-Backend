@@ -36,11 +36,15 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MemberServiceImplTest {
 
-    @Mock private UserDao userDao;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private com.smallnine.apiserver.service.FileStorageService fileStorageService;
+    @Mock
+    private UserDao userDao;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+    @Mock
+    private com.smallnine.apiserver.service.FileStorageService fileStorageService;
 
-    @InjectMocks private MemberServiceImpl memberService;
+    @InjectMocks
+    private MemberServiceImpl memberService;
 
     private GoogleProfile googleProfile(String sub, String email) {
         return new GoogleProfile(sub, email, "Test User", "https://example.com/pic.jpg");

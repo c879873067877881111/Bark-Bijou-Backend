@@ -29,10 +29,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenServiceImplTest {
 
-    @Mock private RefreshTokenDao refreshTokenDao;
-    @Mock private JwtUtil jwtUtil;
+    @Mock
+    private RefreshTokenDao refreshTokenDao;
+    @Mock
+    private JwtUtil jwtUtil;
 
-    @InjectMocks private RefreshTokenServiceImpl service;
+    @InjectMocks
+    private RefreshTokenServiceImpl service;
 
     private User user;
 

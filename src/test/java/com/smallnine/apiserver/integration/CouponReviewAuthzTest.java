@@ -35,7 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class CouponReviewAuthzTest extends AbstractIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
     private UserPrincipal seedUser() {
         User u = new User();

@@ -23,9 +23,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class CartServiceTest {
 
-    @Autowired private CartService cartService;
-    @Autowired private CartItemDao cartItemDao;
-    @Autowired private ProductDao productDao;
+    @Autowired
+    private CartService cartService;
+    @Autowired
+    private CartItemDao cartItemDao;
+    @Autowired
+    private ProductDao productDao;
 
     private static final Long MEMBER_ID = 1L;
     private static final Long PRODUCT_ID_1 = 1L; // stock=50, price=899, salePrice=799

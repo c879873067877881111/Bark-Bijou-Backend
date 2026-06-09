@@ -23,10 +23,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OAuth2ExchangeServiceTest {
 
-    @Mock private OAuth2CodeStore codeStore;
-    @Mock private UserDao userDao;
+    @Mock
+    private OAuth2CodeStore codeStore;
+    @Mock
+    private UserDao userDao;
 
-    @InjectMocks private OAuth2ExchangeService service;
+    @InjectMocks
+    private OAuth2ExchangeService service;
 
     private OAuth2CodeStore.Payload payload;
 

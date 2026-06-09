@@ -31,14 +31,21 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceResendVerificationTest {
 
-    @Mock private UserDao userDao;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private JwtUtil jwtUtil;
-    @Mock private RefreshTokenService refreshTokenService;
-    @Mock private AuditLogger auditLogger;
-    @Mock private MailService mailService;
+    @Mock
+    private UserDao userDao;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtUtil jwtUtil;
+    @Mock
+    private RefreshTokenService refreshTokenService;
+    @Mock
+    private AuditLogger auditLogger;
+    @Mock
+    private MailService mailService;
 
-    @InjectMocks private AuthServiceImpl authService;
+    @InjectMocks
+    private AuthServiceImpl authService;
 
     @Test
     void unknownEmail_doesNotThrow_andDoesNotSendMail() {

@@ -27,8 +27,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class BrandCategoryAuthzTest extends AbstractIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private String json(Map<String, Object> body) throws Exception {
         return objectMapper.writeValueAsString(body);
