@@ -133,7 +133,7 @@ public class ArticleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @articleService.findById(#id).memberId == authentication.principal.id")
+    @PreAuthorize("@securityService.canEditArticle(authentication, #id)")
     @Operation(summary = "更新文章", description = "更新指定ID的文章")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "更新成功"),
@@ -151,7 +151,7 @@ public class ArticleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @articleService.findById(#id).memberId == authentication.principal.id")
+    @PreAuthorize("@securityService.canEditArticle(authentication, #id)")
     @Operation(summary = "刪除文章", description = "刪除指定ID的文章")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "刪除成功"),
