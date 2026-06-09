@@ -39,12 +39,18 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OrderServiceDbUniqueFallbackTest {
 
-    @Mock private OrderDao orderDao;
-    @Mock private OrderItemDao orderItemDao;
-    @Mock private ProductDao productDao;
-    @Mock private RedisTemplate<String, Object> redisTemplate;
-    @Mock private OrderCreationService orderCreationService;
-    @Mock private ValueOperations<String, Object> valueOps;
+    @Mock
+    private OrderDao orderDao;
+    @Mock
+    private OrderItemDao orderItemDao;
+    @Mock
+    private ProductDao productDao;
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private OrderCreationService orderCreationService;
+    @Mock
+    private ValueOperations<String, Object> valueOps;
 
     private OrderServiceImpl orderService;
 

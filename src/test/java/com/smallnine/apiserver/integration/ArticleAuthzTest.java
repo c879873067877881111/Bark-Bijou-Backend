@@ -31,8 +31,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class ArticleAuthzTest extends AbstractIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ArticleService articleService;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ArticleService articleService;
 
     // 用真實 UserPrincipal 當 principal（Spring 內建 user() 產的不是 UserPrincipal，canEditArticle 會判 false）
     private RequestPostProcessor asUser(long id, User.Role role) {

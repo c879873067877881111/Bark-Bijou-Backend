@@ -40,10 +40,14 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OrderCreationServiceStockTest {
 
-    @Mock private OrderDao orderDao;
-    @Mock private OrderItemDao orderItemDao;
-    @Mock private CartService cartService;
-    @Mock private ProductService productService;
+    @Mock
+    private OrderDao orderDao;
+    @Mock
+    private OrderItemDao orderItemDao;
+    @Mock
+    private CartService cartService;
+    @Mock
+    private ProductService productService;
 
     private OrderCreationServiceImpl orderCreationService;
 

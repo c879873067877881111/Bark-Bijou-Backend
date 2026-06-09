@@ -33,13 +33,20 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class OrderServiceTest {
 
-    @Autowired private OrderService orderService;
-    @Autowired private OrderDao orderDao;
-    @Autowired private OrderItemDao orderItemDao;
-    @Autowired private CartService cartService;
-    @Autowired private CartItemDao cartItemDao;
-    @Autowired private ProductDao productDao;
-    @Autowired private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private OrderService orderService;
+    @Autowired
+    private OrderDao orderDao;
+    @Autowired
+    private OrderItemDao orderItemDao;
+    @Autowired
+    private CartService cartService;
+    @Autowired
+    private CartItemDao cartItemDao;
+    @Autowired
+    private ProductDao productDao;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     private static final Long MEMBER_ID = 1L;
     private static final Long OTHER_MEMBER_ID = 2L;

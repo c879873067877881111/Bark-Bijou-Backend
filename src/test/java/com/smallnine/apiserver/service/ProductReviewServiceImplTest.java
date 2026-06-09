@@ -30,10 +30,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ProductReviewServiceImplTest {
 
-    @Mock private ProductReviewDao productReviewDao;
-    @Mock private OrderItemDao orderItemDao;
+    @Mock
+    private ProductReviewDao productReviewDao;
+    @Mock
+    private OrderItemDao orderItemDao;
 
-    @InjectMocks private ProductReviewServiceImpl productReviewService;
+    @InjectMocks
+    private ProductReviewServiceImpl productReviewService;
 
     private Review newReview() {
         Review r = new Review();

@@ -27,9 +27,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SecurityServiceTest {
 
-    @Mock private ArticleService articleService;
+    @Mock
+    private ArticleService articleService;
 
-    @InjectMocks private SecurityService securityService;
+    @InjectMocks
+    private SecurityService securityService;
 
     // 用真實 UserPrincipal 包 User，權限沿用 UserPrincipal.getAuthorities()（ROLE_<role>）
     private Authentication authFor(Long userId, User.Role role) {
