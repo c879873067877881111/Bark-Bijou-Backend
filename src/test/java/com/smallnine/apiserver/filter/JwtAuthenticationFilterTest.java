@@ -97,4 +97,20 @@ class JwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verifyNoInteractions(jwtUtil, userDetailsService);
     }
+
+    @Test
+    void malformedToken_doesNotAuthenticate_andAudits() throws Exception {
+        // extractUsername 丟例外 → username 留 null → 不查 user、不認證，但有稽核
+        when(jwtUtil.extractUsername("bad")).thenThrow(new io.jsonwebtoken.MalformedJwtException("bad"));
+
+        MockHttpServletRequest req = bearer("bad");
+        FilterChain chain = mock(FilterChain.class);
+
+        filter.doFilter(req, new MockHttpServletResponse(), chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verifyNoInteractions(userDetailsService);
+        verify(auditLogger).logAccessDenied(any(), any());
+        verify(chain).doFilter(any(), any());
+    }
 }
